@@ -14,12 +14,15 @@ venv/
 .coverage
 htmlcov/
 *.egg-info/
+build/
 
 # Frontend
 node_modules/
 dist/
 coverage/
 *.tsbuildinfo
+playwright-report/
+test-results/
 
 # Local tooling
 .DS_Store

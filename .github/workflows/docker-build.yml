@@ -1,0 +1,35 @@
+name: Container smoke tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: docker compose config --quiet
+      - run: docker compose up --build -d --wait --wait-timeout 240
+      - run: python scripts/smoke_test.py
+      - name: Verify infrastructure
+        run: |
+          docker compose exec -T postgres sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+          docker compose exec -T redis redis-cli ping
+          docker compose exec -T kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:29092 --list
+      - name: Capture container state
+        if: always()
+        run: |
+          docker compose ps -a
+          docker compose logs --no-color --tail=100
+      - name: Stop containers
+        if: always()
+        run: docker compose down

@@ -1,0 +1,25 @@
+name: Dependency audit
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install ./apps/api ./apps/worker pip-audit
+      - run: python -m pip_audit
+      - run: npm ci --prefix apps/web
+      - run: npm audit --prefix apps/web --audit-level=high
