@@ -1,8 +1,9 @@
 # Production Transaction Monitoring
 
-Day 1 bootstrap for a transaction monitoring monorepo: FastAPI, a standalone Python
+Transaction monitoring monorepo: FastAPI, a standalone Python
 worker, React with TypeScript, PostgreSQL, Redis, and Apache Kafka in KRaft mode.
-Transaction ingestion, database models, anomaly detection, and alerts are future work.
+SQLAlchemy models and Alembic migrations support transactions and processed events.
+Transaction ingestion endpoints, anomaly detection, and alerts are future work.
 
 ## Start locally with Docker
 
@@ -14,6 +15,9 @@ docker compose config --quiet
 docker compose up --build -d --wait --wait-timeout 240
 python scripts/smoke_test.py
 ```
+
+Compose runs a one-shot `migrate` service after PostgreSQL becomes healthy and waits
+for migrations to complete before starting the API.
 
 The defaults work without an `.env` file. To customize ports or credentials, copy
 `.env.example` to `.env` (`Copy-Item .env.example .env` in PowerShell, or
@@ -69,8 +73,41 @@ npm run dev
 ```
 
 The development UI proxies requests to `http://127.0.0.1:8000`. Set
-`API_PROXY_TARGET` if the API runs at a different address. The Day 1 applications
-do not access the infrastructure yet, so they can also run without those services.
+`API_PROXY_TARGET` if the API runs at a different address. API liveness is independent
+of the database, but repository operations require a migrated PostgreSQL database.
+
+## Database migrations and tests
+
+SQLAlchemy uses the psycopg driver and a lazily created connection pool with
+`pool_pre_ping`. Outside Compose, connection settings come from the `POSTGRES_*`
+variables in `.env` or an explicit `DATABASE_URL` override. Compose uses the internal
+`postgres:5432` address and its own `POSTGRES_*` values. Passwords are safely URL-encoded.
+
+From the root with the virtual environment active:
+
+```sh
+python -m alembic -c apps/api/alembic.ini upgrade head
+python -m alembic -c apps/api/alembic.ini current
+python -m alembic -c apps/api/alembic.ini check
+```
+
+`downgrade base` reverses the initial migration and **drops both tables and their data**.
+The integration suite tests that operation only in disposable, randomly named schemas.
+
+For PostgreSQL integration tests, explicitly set `TEST_DATABASE_URL` to a PostgreSQL
+database where the test user can create schemas (the variable is read from the process
+environment, not `.env`). In PowerShell:
+
+```powershell
+$env:TEST_DATABASE_URL = 'postgresql+psycopg://monitoring:local-development-only@127.0.0.1:5432/transactions'
+python -m pytest apps/api/tests -W error
+```
+
+In POSIX shells, export the same variable before running pytest. Without this variable,
+integration tests are skipped; the dedicated GitHub Actions database job always sets it.
+Tests cover upgrade/downgrade/re-upgrade, schema drift, indexes, insert/retrieve,
+constraint enforcement, and complete rollback on duplicate event IDs.
+See [the data model](docs/architecture/data-model.md) for table definitions and usage.
 
 ## Validate
 
@@ -94,7 +131,7 @@ on pull requests or manual dispatch. These workflows run when changes reach GitH
 
 ## Layout
 
-- `apps/api`: FastAPI project, API tests, and migration scaffolding.
+- `apps/api`: FastAPI project, SQLAlchemy repositories, migrations, and API/database tests.
 - `apps/worker`: separately packaged Python worker and tests.
 - `apps/web`: React, TypeScript, Vite, and the Nginx production proxy.
 - `contracts/events`: reserved event contracts and examples.
@@ -106,5 +143,5 @@ on pull requests or manual dispatch. These workflows run when changes reach GitH
 
 Compose uses the Dockerfiles in `apps/*`. The copies under `infra/docker` use the
 same corresponding app build contexts and should be kept in sync.
-Files outside the Day 1 implementation remain placeholders. No license has been
+Files outside the implemented bootstrap and database layer remain placeholders. No license has been
 selected yet; `LICENSE` remains a placeholder.

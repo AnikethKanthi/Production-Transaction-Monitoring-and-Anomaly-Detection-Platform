@@ -20,6 +20,8 @@ jobs:
       - run: docker compose config --quiet
       - run: docker compose up --build -d --wait --wait-timeout 240
       - run: python scripts/smoke_test.py
+      - name: Verify migrated schema
+        run: docker compose run --rm --no-deps migrate python -m alembic -c alembic.ini check
       - name: Verify infrastructure
         run: |
           docker compose exec -T postgres sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"'

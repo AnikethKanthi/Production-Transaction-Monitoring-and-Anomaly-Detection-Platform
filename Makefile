@@ -1,4 +1,4 @@
-.PHONY: up down build logs ps smoke test
+.PHONY: up down build logs ps smoke test migrate
 
 up:
 	docker compose up --build -d --wait --wait-timeout 240
@@ -8,6 +8,9 @@ down:
 
 build:
 	docker compose build
+
+migrate:
+	docker compose run --rm --build migrate
 
 logs:
 	docker compose logs --tail=100 -f
