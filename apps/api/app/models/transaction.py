@@ -13,10 +13,12 @@ class Transaction(Base):
     __table_args__ = (
         CheckConstraint("amount > 0", name="positive_amount"),
         CheckConstraint("currency ~ '^[A-Z]{3}$'", name="currency_code"),
+        CheckConstraint("country ~ '^[A-Z]{2}$'", name="country_code"),
         CheckConstraint("status IN ('pending', 'completed', 'failed')", name="valid_status"),
         Index("ix_transactions_occurred_at_id", "occurred_at", "id"),
         Index("ix_transactions_account_id_occurred_at", "account_id", "occurred_at"),
         Index("ix_transactions_status_occurred_at", "status", "occurred_at"),
+        Index("ix_transactions_country_occurred_at", "country", "occurred_at"),
     )
 
     id: Mapped[UUID] = mapped_column(
@@ -26,6 +28,7 @@ class Transaction(Base):
     merchant_id: Mapped[str | None] = mapped_column(String(128))
     amount: Mapped[Decimal] = mapped_column(Numeric(18, 2), nullable=False)
     currency: Mapped[str] = mapped_column(String(3), nullable=False)
+    country: Mapped[str] = mapped_column(String(2), nullable=False)
     status: Mapped[str] = mapped_column(String(16), nullable=False, server_default="pending")
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     created_at: Mapped[datetime] = mapped_column(

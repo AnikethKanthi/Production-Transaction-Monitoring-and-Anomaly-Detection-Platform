@@ -22,6 +22,7 @@ def transaction(**overrides) -> Transaction:
         "merchant_id": "merchant-1",
         "amount": Decimal("123.45"),
         "currency": "USD",
+        "country": "US",
         "occurred_at": datetime(2026, 1, 1, 12, tzinfo=UTC),
     }
     return Transaction(**(values | overrides))
@@ -51,11 +52,13 @@ def test_filter_and_pagination(migrated_connection: Connection) -> None:
         first = repo.add(transaction())
         second = repo.add(transaction(occurred_at=first.occurred_at + timedelta(seconds=1)))
         repo.add(transaction(account_id="account-2"))
-        assert [row.id for row in repo.list(account_id="account-1")] == [second.id, first.id]
-        assert [row.id for row in repo.list(account_id="account-1", limit=1, offset=1)] == [
-            first.id
-        ]
-        assert repo.list(account_id="missing") == []
+        items, total = repo.list(account_id="account-1")
+        assert total == 2
+        assert [row.id for row in items] == [second.id, first.id]
+        items, total = repo.list(account_id="account-1", limit=1, offset=1)
+        assert total == 2
+        assert [row.id for row in items] == [first.id]
+        assert repo.list(account_id="missing") == ([], 0)
         with pytest.raises(ValueError):
             repo.list(limit=0)
 
@@ -99,6 +102,7 @@ def test_duplicate_event_rolls_back_whole_unit_of_work(migrated_connection: Conn
         {"currency": "usd"},
         {"currency": "US"},
         {"currency": "123"},
+        {"country": "us"},
         {"status": "unknown"},
     ],
 )
