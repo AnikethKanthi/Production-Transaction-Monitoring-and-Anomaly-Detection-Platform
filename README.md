@@ -3,7 +3,8 @@
 Transaction monitoring monorepo: FastAPI, a standalone Python
 worker, React with TypeScript, PostgreSQL, Redis, and Apache Kafka in KRaft mode.
 SQLAlchemy models and Alembic migrations support transactions and processed events.
-Transaction ingestion endpoints, anomaly detection, and alerts are future work.
+Transaction ingestion endpoints and a Kafka transaction event pipeline are implemented;
+anomaly detection and alerts are future work.
 
 ## Start locally with Docker
 
@@ -35,7 +36,9 @@ The defaults work without an `.env` file. To customize ports or credentials, cop
 
 `GET /health` returns `{"status":"ok","service":"api","version":"0.1.0"}`.
 It checks API liveness. Compose independently checks PostgreSQL, Redis, Kafka, API,
-and web health; the worker runs in bootstrap mode and logs periodic heartbeats.
+and web health. Compose creates the `transactions.v1` topic before starting the API and
+worker. The worker validates each event, processes valid messages, and safely commits
+invalid messages after logging their rejection.
 The frontend checks the real API through a same-origin `/api` proxy.
 
 ```sh
@@ -71,6 +74,16 @@ cd apps/web
 npm ci
 npm run dev
 ```
+
+Publish generated events from the repository root while Kafka and the worker are running:
+
+```sh
+python scripts/generate_transactions.py --count 10 --interval 0.1
+```
+
+The v1 event contract is stored at
+`contracts/events/transaction-created.v1.schema.json`. Kafka records use the transaction
+UUID as their key, which keeps events for the same transaction in one partition.
 
 The development UI proxies requests to `http://127.0.0.1:8000`. Set
 `API_PROXY_TARGET` if the API runs at a different address. API liveness is independent
@@ -134,7 +147,7 @@ on pull requests or manual dispatch. These workflows run when changes reach GitH
 - `apps/api`: FastAPI project, SQLAlchemy repositories, migrations, and API/database tests.
 - `apps/worker`: separately packaged Python worker and tests.
 - `apps/web`: React, TypeScript, Vite, and the Nginx production proxy.
-- `contracts/events`: reserved event contracts and examples.
+- `contracts/events`: versioned JSON Schema event contracts and examples.
 - `infra`: database initialization, Kafka scripts, and Dockerfile mirrors.
 - `observability`: reserved Prometheus and Grafana configuration.
 - `data` and `model-artifacts`: directories for later ML work.
@@ -143,5 +156,5 @@ on pull requests or manual dispatch. These workflows run when changes reach GitH
 
 Compose uses the Dockerfiles in `apps/*`. The copies under `infra/docker` use the
 same corresponding app build contexts and should be kept in sync.
-Files outside the implemented bootstrap and database layer remain placeholders. No license has been
-selected yet; `LICENSE` remains a placeholder.
+Files outside the implemented bootstrap, transaction API, database, and transaction-event layers
+remain placeholders. No license has been selected yet; `LICENSE` remains a placeholder.

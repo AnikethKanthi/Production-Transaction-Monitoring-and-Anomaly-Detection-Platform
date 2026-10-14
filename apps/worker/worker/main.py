@@ -3,15 +3,19 @@ import signal
 from threading import Event
 
 from worker.config import Settings
+from worker.consumers.transaction_consumer import TransactionConsumer
 from worker.logging import configure_logging
+from worker.processors.transaction_processor import process_transaction
 
 
-def run(stop: Event, settings: Settings) -> None:
+def run(stop: Event, settings: Settings, consumer: TransactionConsumer | None = None) -> None:
     logger = logging.getLogger(__name__)
-    logger.info("Worker started in bootstrap mode; event processing is not configured")
-    while not stop.wait(settings.worker_heartbeat_seconds):
-        logger.info("Worker heartbeat")
-    logger.info("Worker stopped")
+    transaction_consumer = consumer or TransactionConsumer.from_settings(
+        settings, processor=process_transaction
+    )
+    logger.info("Transaction consumer starting")
+    transaction_consumer.run(stop)
+    logger.info("Transaction consumer stopped")
 
 
 def main() -> None:

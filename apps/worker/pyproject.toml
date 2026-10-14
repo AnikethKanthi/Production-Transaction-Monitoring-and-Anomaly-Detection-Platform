@@ -7,7 +7,11 @@ name = "transaction-monitoring-worker"
 version = "0.1.0"
 description = "Background worker bootstrap for transaction monitoring"
 requires-python = ">=3.12"
-dependencies = ["pydantic-settings>=2.8,<3"]
+dependencies = [
+    "confluent-kafka>=2.6,<3",
+    "pydantic>=2.10,<3",
+    "pydantic-settings>=2.8,<3",
+]
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<10", "ruff>=0.11,<1"]
