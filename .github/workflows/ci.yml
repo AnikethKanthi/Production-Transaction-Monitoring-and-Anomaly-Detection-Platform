@@ -57,6 +57,10 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install -e '.[dev]'
       - run: python -m pytest -m integration -W error
+      - name: Test worker persistence and idempotency
+        run: |
+          python -m pip install -e '../worker[dev]'
+          python -m pytest ../worker/tests -m integration -W error
 
   web:
     runs-on: ubuntu-latest

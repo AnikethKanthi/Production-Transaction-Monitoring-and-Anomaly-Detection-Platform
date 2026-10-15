@@ -6,6 +6,7 @@ from pydantic import ValidationError
 
 from worker.config import Settings
 from worker.main import run
+from worker.persistence.database import get_session_factory
 
 
 def test_worker_stops_when_signalled() -> None:
@@ -22,3 +23,16 @@ def test_worker_stops_when_signalled() -> None:
 def test_poll_timeout_must_be_positive() -> None:
     with pytest.raises(ValidationError):
         Settings(kafka_poll_timeout_seconds=0)
+
+
+def test_processing_attempts_must_be_positive() -> None:
+    with pytest.raises(ValidationError):
+        Settings(kafka_max_processing_attempts=0)
+
+
+def test_session_factory_accepts_settings() -> None:
+    factory = get_session_factory(Settings())
+    try:
+        assert factory.kw["expire_on_commit"] is False
+    finally:
+        factory.kw["bind"].dispose()

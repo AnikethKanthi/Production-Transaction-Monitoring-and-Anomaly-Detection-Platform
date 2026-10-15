@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://transaction-monitoring.local/contracts/transaction-dead-letter.v1.schema.json",
+  "title": "Transaction dead-letter event v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dead_letter_id",
+    "failed_at",
+    "original_topic",
+    "original_partition",
+    "original_offset",
+    "original_key_base64",
+    "original_payload_base64",
+    "event_id",
+    "attempts",
+    "error_type",
+    "error_message"
+  ],
+  "properties": {
+    "dead_letter_id": { "type": "string", "format": "uuid" },
+    "failed_at": { "type": "string", "format": "date-time" },
+    "original_topic": { "type": "string", "minLength": 1 },
+    "original_partition": { "type": "integer", "minimum": 0 },
+    "original_offset": { "type": "integer", "minimum": 0 },
+    "original_key_base64": { "type": ["string", "null"], "contentEncoding": "base64" },
+    "original_payload_base64": { "type": "string", "contentEncoding": "base64" },
+    "event_id": {
+      "oneOf": [
+        { "type": "string", "format": "uuid" },
+        { "type": "null" }
+      ]
+    },
+    "attempts": { "type": "integer", "minimum": 1 },
+    "error_type": { "type": "string", "minLength": 1 },
+    "error_message": { "type": "string" }
+  }
+}

@@ -27,6 +27,7 @@ jobs:
           docker compose exec -T postgres sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
           docker compose exec -T redis redis-cli ping
           docker compose exec -T kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:29092 --describe --topic transactions.v1
+          docker compose exec -T kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:29092 --describe --topic transactions.v1.dlq
       - name: Verify transaction event flow
         run: |
           python -m pip install -e './apps/worker'

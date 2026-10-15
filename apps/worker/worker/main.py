@@ -5,13 +5,14 @@ from threading import Event
 from worker.config import Settings
 from worker.consumers.transaction_consumer import TransactionConsumer
 from worker.logging import configure_logging
-from worker.processors.transaction_processor import process_transaction
+from worker.persistence.database import get_session_factory
+from worker.processors.transaction_processor import TransactionProcessor
 
 
 def run(stop: Event, settings: Settings, consumer: TransactionConsumer | None = None) -> None:
     logger = logging.getLogger(__name__)
     transaction_consumer = consumer or TransactionConsumer.from_settings(
-        settings, processor=process_transaction
+        settings, processor=TransactionProcessor(get_session_factory(settings)).process
     )
     logger.info("Transaction consumer starting")
     transaction_consumer.run(stop)

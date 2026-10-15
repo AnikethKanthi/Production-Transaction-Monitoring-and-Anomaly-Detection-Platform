@@ -6,14 +6,16 @@ from uuid import uuid4
 import pytest
 from pydantic import ValidationError
 
+from worker.events.dead_letter import DeadLetterEvent
 from worker.events.transaction import (
     TransactionData,
     TransactionEvent,
     deserialize_transaction_event,
     serialize_transaction_event,
 )
+from worker.kafka.dead_letter_producer import DeadLetterProducer
 from worker.kafka.producer import EventDeliveryError, TransactionEventProducer
-from worker.kafka.topics import TRANSACTIONS_TOPIC
+from worker.kafka.topics import TRANSACTIONS_DEAD_LETTER_TOPIC, TRANSACTIONS_TOPIC
 
 
 def event() -> TransactionEvent:
@@ -83,3 +85,23 @@ def test_producer_reports_delivery_timeout() -> None:
     client.flush.return_value = 1
     with pytest.raises(EventDeliveryError, match="not delivered"):
         TransactionEventProducer(client).publish(event())
+
+
+def test_dead_letter_producer_preserves_failure_metadata() -> None:
+    client = Mock()
+    client.flush.return_value = 0
+    dead_letter = DeadLetterEvent.from_message(
+        topic=TRANSACTIONS_TOPIC,
+        partition=2,
+        offset=9,
+        key=b"key",
+        payload=b"invalid",
+        event_id=None,
+        attempts=1,
+        error=ValueError("invalid event"),
+    )
+
+    DeadLetterProducer(client).publish(dead_letter)
+
+    assert client.produce.call_args.args == (TRANSACTIONS_DEAD_LETTER_TOPIC,)
+    assert b'"original_offset":9' in client.produce.call_args.kwargs["value"]

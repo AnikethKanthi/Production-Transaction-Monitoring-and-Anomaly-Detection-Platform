@@ -69,18 +69,13 @@ services:
 
   kafka-init:
     image: apache/kafka:4.1.2
+    entrypoint: ["/bin/bash", "-ec"]
     command:
-      - /opt/kafka/bin/kafka-topics.sh
-      - --bootstrap-server
-      - kafka:29092
-      - --create
-      - --if-not-exists
-      - --topic
-      - transactions.v1
-      - --partitions
-      - "3"
-      - --replication-factor
-      - "1"
+      - |
+        for topic in transactions.v1 transactions.v1.dlq; do
+          /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:29092 \
+            --create --if-not-exists --topic "$$topic" --partitions 3 --replication-factor 1
+        done
     depends_on:
       kafka:
         condition: service_healthy
@@ -121,10 +116,17 @@ services:
     build:
       context: ./apps/worker
     environment:
+      <<: *database-environment
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KAFKA_CONSUMER_GROUP: ${KAFKA_CONSUMER_GROUP:-transaction-processor-v1}
       KAFKA_POLL_TIMEOUT_SECONDS: ${KAFKA_POLL_TIMEOUT_SECONDS:-1}
+      KAFKA_MAX_PROCESSING_ATTEMPTS: ${KAFKA_MAX_PROCESSING_ATTEMPTS:-3}
+      KAFKA_RETRY_BACKOFF_SECONDS: ${KAFKA_RETRY_BACKOFF_SECONDS:-0.5}
     depends_on:
+      migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
       kafka:
         condition: service_healthy
       kafka-init:

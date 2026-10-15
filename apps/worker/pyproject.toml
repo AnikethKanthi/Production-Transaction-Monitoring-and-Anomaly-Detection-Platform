@@ -11,6 +11,8 @@ dependencies = [
     "confluent-kafka>=2.6,<3",
     "pydantic>=2.10,<3",
     "pydantic-settings>=2.8,<3",
+    "psycopg[binary]>=3.2,<4",
+    "sqlalchemy>=2.0.36,<2.1",
 ]
 
 [project.optional-dependencies]
@@ -22,6 +24,7 @@ namespaces = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = ["integration: requires PostgreSQL via TEST_DATABASE_URL"]
 
 [tool.ruff]
 target-version = "py312"

@@ -37,8 +37,9 @@ The defaults work without an `.env` file. To customize ports or credentials, cop
 `GET /health` returns `{"status":"ok","service":"api","version":"0.1.0"}`.
 It checks API liveness. Compose independently checks PostgreSQL, Redis, Kafka, API,
 and web health. Compose creates the `transactions.v1` topic before starting the API and
-worker. The worker validates each event, processes valid messages, and safely commits
-invalid messages after logging their rejection.
+worker. The worker validates and persists each event with an idempotency receipt, retries
+processing failures, and routes malformed or exhausted records to `transactions.v1.dlq`.
+Kafka offsets are committed only after persistence or successful dead-letter publication.
 The frontend checks the real API through a same-origin `/api` proxy.
 
 ```sh
