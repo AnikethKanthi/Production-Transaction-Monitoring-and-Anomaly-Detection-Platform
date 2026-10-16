@@ -39,7 +39,31 @@
         "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
         "country": { "type": "string", "pattern": "^[A-Z]{2}$" },
         "status": { "enum": ["pending", "completed", "failed"] },
-        "occurred_at": { "type": "string", "format": "date-time" }
+        "occurred_at": { "type": "string", "format": "date-time" },
+        "device_id": {
+          "oneOf": [
+            { "type": "string", "minLength": 1, "maxLength": 128 },
+            { "type": "null" }
+          ]
+        },
+        "ip_address": {
+          "oneOf": [
+            { "type": "string", "minLength": 1, "maxLength": 128 },
+            { "type": "null" }
+          ]
+        },
+        "payment_method": {
+          "oneOf": [
+            { "type": "string", "minLength": 1, "maxLength": 128 },
+            { "type": "null" }
+          ]
+        },
+        "order_amount": {
+          "oneOf": [
+            { "type": "string", "pattern": "^[0-9]{1,16}(\\.[0-9]{1,2})?$" },
+            { "type": "null" }
+          ]
+        }
       }
     }
   }

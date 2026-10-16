@@ -9,7 +9,11 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from worker.consumers.transaction_consumer import TransactionConsumer
 from worker.events.transaction import TransactionData, TransactionEvent, serialize_transaction_event
-from worker.persistence.models import ProcessedEventRecord, TransactionRecord
+from worker.persistence.models import (
+    InferenceFeatureRecord,
+    ProcessedEventRecord,
+    TransactionRecord,
+)
 from worker.processors.transaction_processor import ProcessingResult, TransactionProcessor
 
 pytestmark = pytest.mark.integration
@@ -41,6 +45,11 @@ def test_replay_is_idempotent(session_factory: sessionmaker[Session]) -> None:
     with session_factory() as session:
         assert session.scalar(select(func.count()).select_from(TransactionRecord)) == 1
         assert session.scalar(select(func.count()).select_from(ProcessedEventRecord)) == 1
+        assert session.scalar(select(func.count()).select_from(InferenceFeatureRecord)) == 1
+        stored = session.scalar(select(InferenceFeatureRecord))
+        assert stored is not None
+        assert stored.feature_definition_version == "transaction_features.v1"
+        assert stored.features["transaction_amount"] == 25.0
 
 
 def test_transient_failure_retries_then_persists(session_factory: sessionmaker[Session]) -> None:

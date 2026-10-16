@@ -31,6 +31,10 @@ class Transaction(Base):
     country: Mapped[str] = mapped_column(String(2), nullable=False)
     status: Mapped[str] = mapped_column(String(16), nullable=False, server_default="pending")
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    device_id: Mapped[str | None] = mapped_column(String(128))
+    ip_address: Mapped[str | None] = mapped_column(String(128))
+    payment_method: Mapped[str | None] = mapped_column(String(128))
+    order_amount: Mapped[Decimal | None] = mapped_column(Numeric(18, 2))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

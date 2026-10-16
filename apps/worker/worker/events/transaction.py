@@ -28,6 +28,10 @@ class TransactionData(BaseModel):
     country: CountryCode
     status: TransactionStatus
     occurred_at: datetime
+    device_id: Identifier | None = None
+    ip_address: Identifier | None = None
+    payment_method: Identifier | None = None
+    order_amount: Decimal | None = Field(default=None, gt=0, max_digits=18, decimal_places=2)
 
     @field_validator("occurred_at")
     @classmethod

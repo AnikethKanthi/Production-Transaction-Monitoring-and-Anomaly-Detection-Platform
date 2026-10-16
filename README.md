@@ -40,6 +40,8 @@ and web health. Compose creates the `transactions.v1` topic before starting the 
 worker. The worker validates and persists each event with an idempotency receipt, retries
 processing failures, and routes malformed or exhausted records to `transactions.v1.dlq`.
 Kafka offsets are committed only after persistence or successful dead-letter publication.
+Each accepted transaction also stores the deterministic `transaction_features.v1` inference
+vector, including velocity, customer-baseline, location, device, IP, time, and payment signals.
 The frontend checks the real API through a same-origin `/api` proxy.
 
 ```sh

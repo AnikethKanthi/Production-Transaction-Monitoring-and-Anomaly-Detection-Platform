@@ -13,6 +13,7 @@ from worker.events.transaction import TransactionData, TransactionEvent  # noqa:
 from worker.kafka.producer import TransactionEventProducer  # noqa: E402
 
 CURRENCIES = (("US", "USD"), ("GB", "GBP"), ("DE", "EUR"), ("CA", "CAD"))
+PAYMENT_METHODS = ("card", "bank_transfer", "wallet")
 
 
 def generate_event(randomizer: random.Random) -> TransactionEvent:
@@ -29,6 +30,10 @@ def generate_event(randomizer: random.Random) -> TransactionEvent:
             country=country,
             status="completed",
             occurred_at=now,
+            device_id=f"device-{randomizer.randint(1, 250):04d}",
+            ip_address=f"198.51.100.{randomizer.randint(1, 254)}",
+            payment_method=randomizer.choice(PAYMENT_METHODS),
+            order_amount=Decimal(randomizer.randint(100, 250_000)) / 100,
         ),
     )
 

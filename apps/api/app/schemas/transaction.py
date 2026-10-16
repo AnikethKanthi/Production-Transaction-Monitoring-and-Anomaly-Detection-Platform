@@ -36,6 +36,10 @@ class TransactionCreate(BaseModel):
                     "country": "US",
                     "status": "pending",
                     "occurred_at": "2026-10-13T14:30:00Z",
+                    "device_id": "device_8",
+                    "ip_address": "203.0.113.8",
+                    "payment_method": "card",
+                    "order_amount": "149.95",
                 }
             ]
         }
@@ -48,6 +52,10 @@ class TransactionCreate(BaseModel):
     country: CountryCode
     status: TransactionStatus = TransactionStatus.pending
     occurred_at: datetime
+    device_id: Identifier | None = None
+    ip_address: Identifier | None = None
+    payment_method: Identifier | None = None
+    order_amount: Decimal | None = Field(default=None, gt=0, max_digits=18, decimal_places=2)
 
     @model_validator(mode="after")
     def require_timezone(self) -> "TransactionCreate":
@@ -99,6 +107,10 @@ class TransactionRead(BaseModel):
     status: TransactionStatus
     occurred_at: datetime
     created_at: datetime
+    device_id: str | None
+    ip_address: str | None
+    payment_method: str | None
+    order_amount: Decimal | None
 
 
 class PaginationMeta(BaseModel):
