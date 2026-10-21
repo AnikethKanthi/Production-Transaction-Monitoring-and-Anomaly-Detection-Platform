@@ -88,6 +88,20 @@ The v1 event contract is stored at
 `contracts/events/transaction-created.v1.schema.json`. Kafka records use the transaction
 UUID as their key, which keeps events for the same transaction in one partition.
 
+## Train the anomaly model
+
+Install the API ML dependencies and run the deterministic training command:
+
+```sh
+pip install -e "apps/api[ml]"
+python scripts/train_model.py
+```
+
+The command uses seed `42` to generate labeled synthetic data and trains
+`isolation_forest.v1` on normal examples. It writes the versioned joblib model, metadata,
+evaluation report, and score-distribution chart to `model-artifacts/`. Generated CSV datasets
+are written beneath `data/` and can be recreated with the same command.
+
 The development UI proxies requests to `http://127.0.0.1:8000`. Set
 `API_PROXY_TARGET` if the API runs at a different address. API liveness is independent
 of the database, but repository operations require a migrated PostgreSQL database.
@@ -153,11 +167,11 @@ on pull requests or manual dispatch. These workflows run when changes reach GitH
 - `contracts/events`: versioned JSON Schema event contracts and examples.
 - `infra`: database initialization, Kafka scripts, and Dockerfile mirrors.
 - `observability`: reserved Prometheus and Grafana configuration.
-- `data` and `model-artifacts`: directories for later ML work.
+- `data`: generated synthetic and processed training datasets.
+- `model-artifacts`: versioned models, metadata, and evaluation reports.
 - `scripts`: local helpers including the HTTP smoke test.
 - `docs`: architecture, runbooks, and planning scaffolding.
 
 Compose uses the Dockerfiles in `apps/*`. The copies under `infra/docker` use the
 same corresponding app build contexts and should be kept in sync.
-Files outside the implemented bootstrap, transaction API, database, and transaction-event layers
-remain placeholders. No license has been selected yet; `LICENSE` remains a placeholder.
+No license has been selected yet; `LICENSE` remains a placeholder.

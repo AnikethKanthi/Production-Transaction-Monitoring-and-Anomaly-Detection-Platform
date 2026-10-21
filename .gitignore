@@ -28,3 +28,7 @@ test-results/
 .DS_Store
 Thumbs.db
 *.log
+
+# Generated ML datasets (recreate with scripts/train_model.py)
+data/synthetic/*.csv
+data/processed/*.csv

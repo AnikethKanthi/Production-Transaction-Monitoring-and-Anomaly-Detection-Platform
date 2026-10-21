@@ -9,8 +9,8 @@ from uuid import uuid4
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "apps" / "worker"))
 
-from worker.events.transaction import TransactionData, TransactionEvent  # noqa: E402
-from worker.kafka.producer import TransactionEventProducer  # noqa: E402
+from worker.events.transaction import TransactionData, TransactionEvent
+from worker.kafka.producer import TransactionEventProducer
 
 CURRENCIES = (("US", "USD"), ("GB", "GBP"), ("DE", "EUR"), ("CA", "CAD"))
 PAYMENT_METHODS = ("card", "bank_transfer", "wallet")
@@ -39,7 +39,9 @@ def generate_event(randomizer: random.Random) -> TransactionEvent:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Publish generated transactions to Kafka")
+    parser = argparse.ArgumentParser(
+        description="Publish generated transactions to Kafka"
+    )
     parser.add_argument("--bootstrap-servers", default="127.0.0.1:9092")
     parser.add_argument("--count", type=int, default=10)
     parser.add_argument("--interval", type=float, default=0.1)

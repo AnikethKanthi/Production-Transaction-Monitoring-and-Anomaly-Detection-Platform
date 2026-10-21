@@ -1,0 +1,8 @@
+{
+  "anomaly_count": 200,
+  "anomaly_mean_anomaly_score": 0.26901460856819503,
+  "anomaly_score_separation_rate": 1.0,
+  "mean_score_lift": 0.37267961289078505,
+  "normal_count": 2000,
+  "normal_mean_anomaly_score": -0.10366500432259
+}

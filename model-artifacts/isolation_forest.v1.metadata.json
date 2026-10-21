@@ -1,0 +1,54 @@
+{
+  "evaluation": {
+    "anomaly_count": 200,
+    "anomaly_mean_anomaly_score": 0.26901460856819503,
+    "anomaly_score_separation_rate": 1.0,
+    "mean_score_lift": 0.37267961289078505,
+    "normal_count": 2000,
+    "normal_mean_anomaly_score": -0.10366500432259
+  },
+  "feature_definition_version": "transaction_features.v1",
+  "feature_names": [
+    "transaction_amount",
+    "amount_difference_from_customer_average",
+    "transactions_last_5_minutes",
+    "transactions_last_hour",
+    "decline_ratio",
+    "country_change",
+    "new_device_indicator",
+    "new_ip_address_indicator",
+    "unusual_transaction_time",
+    "payment_method_frequency",
+    "order_amount_deviation"
+  ],
+  "library_versions": {
+    "joblib": "1.6.0",
+    "numpy": "2.5.4",
+    "scikit_learn": "1.9.1"
+  },
+  "model_type": "sklearn.ensemble.IsolationForest",
+  "model_version": "isolation_forest.v1",
+  "parameters": {
+    "bootstrap": false,
+    "contamination": 0.09090909090909091,
+    "max_features": 1.0,
+    "max_samples": "auto",
+    "n_estimators": 250,
+    "n_jobs": 1,
+    "random_state": 42,
+    "verbose": 0,
+    "warm_start": false
+  },
+  "random_seed": 42,
+  "training": {
+    "anomaly_rows": 200,
+    "data_end": "2025-01-08T15:15:00Z",
+    "data_start": "2025-01-01T00:00:00Z",
+    "dataset_sha256": "cf5e34a88d22374e2943342fbc9ecb5450e8fa79213fa50ebb1b8591abd93133",
+    "duration_seconds": 0.900388,
+    "finished_at": "2026-10-21T18:05:39.528867+00:00",
+    "fit_rows": 2000,
+    "normal_rows": 2000,
+    "started_at": "2026-10-21T18:05:38.628644+00:00"
+  }
+}
