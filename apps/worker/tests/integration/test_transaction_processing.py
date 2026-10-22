@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from worker.consumers.transaction_consumer import TransactionConsumer
 from worker.events.transaction import TransactionData, TransactionEvent, serialize_transaction_event
 from worker.persistence.models import (
+    AnomalyRecord,
     InferenceFeatureRecord,
     ProcessedEventRecord,
     TransactionRecord,
@@ -46,10 +47,16 @@ def test_replay_is_idempotent(session_factory: sessionmaker[Session]) -> None:
         assert session.scalar(select(func.count()).select_from(TransactionRecord)) == 1
         assert session.scalar(select(func.count()).select_from(ProcessedEventRecord)) == 1
         assert session.scalar(select(func.count()).select_from(InferenceFeatureRecord)) == 1
+        assert session.scalar(select(func.count()).select_from(AnomalyRecord)) == 1
         stored = session.scalar(select(InferenceFeatureRecord))
         assert stored is not None
         assert stored.feature_definition_version == "transaction_features.v1"
         assert stored.features["transaction_amount"] == 25.0
+        anomaly = session.scalar(select(AnomalyRecord))
+        assert anomaly is not None
+        assert anomaly.model_version == "fallback.v1"
+        assert anomaly.scoring_status == "fallback"
+        assert anomaly.score == 0.0
 
 
 def test_transient_failure_retries_then_persists(session_factory: sessionmaker[Session]) -> None:

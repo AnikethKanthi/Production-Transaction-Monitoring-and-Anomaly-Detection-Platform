@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import URL, make_url
@@ -11,6 +13,9 @@ class Settings(BaseSettings):
     kafka_poll_timeout_seconds: float = Field(default=1, gt=0, le=30)
     kafka_max_processing_attempts: int = Field(default=3, ge=1, le=10)
     kafka_retry_backoff_seconds: float = Field(default=0.5, ge=0, le=60)
+    model_path: Path = Path("model-artifacts/isolation_forest.v1.joblib")
+    model_metadata_path: Path = Path("model-artifacts/isolation_forest.v1.metadata.json")
+    metrics_port: int = Field(default=9101, ge=1, le=65535)
     database_url: SecretStr | None = None
     postgres_host: str = "127.0.0.1"
     postgres_port: int = Field(default=5432, ge=1, le=65535)

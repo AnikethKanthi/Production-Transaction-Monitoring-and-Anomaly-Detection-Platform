@@ -4,7 +4,7 @@ Transaction monitoring monorepo: FastAPI, a standalone Python
 worker, React with TypeScript, PostgreSQL, Redis, and Apache Kafka in KRaft mode.
 SQLAlchemy models and Alembic migrations support transactions and processed events.
 Transaction ingestion endpoints and a Kafka transaction event pipeline are implemented;
-anomaly detection and alerts are future work.
+versioned feature extraction, Isolation Forest scoring, and safe fallback scoring run in the worker.
 
 ## Start locally with Docker
 
@@ -101,6 +101,11 @@ The command uses seed `42` to generate labeled synthetic data and trains
 `isolation_forest.v1` on normal examples. It writes the versioned joblib model, metadata,
 evaluation report, and score-distribution chart to `model-artifacts/`. Generated CSV datasets
 are written beneath `data/` and can be recreated with the same command.
+
+The worker loads the active model at startup and stores one anomaly score, model version,
+scoring status, and inference latency for every processed transaction. If loading or scoring
+fails, processing continues with the explicit `fallback.v1` score. Prometheus inference
+metrics are available from the worker on `http://127.0.0.1:9101/metrics` by default.
 
 The development UI proxies requests to `http://127.0.0.1:8000`. Set
 `API_PROXY_TARGET` if the API runs at a different address. API liveness is independent

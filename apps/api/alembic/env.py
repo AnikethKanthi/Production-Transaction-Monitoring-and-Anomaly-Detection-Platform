@@ -5,7 +5,7 @@ from sqlalchemy import create_engine, pool
 from alembic import context
 from app.core.config import Settings
 from app.db.base import Base
-from app.models import InferenceFeature, ProcessedEvent, Transaction  # noqa: F401
+from app.models import Anomaly, InferenceFeature, ProcessedEvent, Transaction  # noqa: F401
 
 config = context.config
 if config.config_file_name is not None:

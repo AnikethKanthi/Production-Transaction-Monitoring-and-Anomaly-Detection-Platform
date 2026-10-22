@@ -114,7 +114,8 @@ services:
 
   worker:
     build:
-      context: ./apps/worker
+      context: .
+      dockerfile: apps/worker/Dockerfile
     environment:
       <<: *database-environment
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
@@ -122,6 +123,11 @@ services:
       KAFKA_POLL_TIMEOUT_SECONDS: ${KAFKA_POLL_TIMEOUT_SECONDS:-1}
       KAFKA_MAX_PROCESSING_ATTEMPTS: ${KAFKA_MAX_PROCESSING_ATTEMPTS:-3}
       KAFKA_RETRY_BACKOFF_SECONDS: ${KAFKA_RETRY_BACKOFF_SECONDS:-0.5}
+      MODEL_PATH: /models/isolation_forest.v1.joblib
+      MODEL_METADATA_PATH: /models/isolation_forest.v1.metadata.json
+      METRICS_PORT: ${WORKER_METRICS_PORT:-9101}
+    ports:
+      - "127.0.0.1:${WORKER_METRICS_PORT:-9101}:9101"
     depends_on:
       migrate:
         condition: service_completed_successfully
