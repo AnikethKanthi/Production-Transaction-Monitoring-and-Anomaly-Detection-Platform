@@ -38,7 +38,7 @@
         },
         "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
         "country": { "type": "string", "pattern": "^[A-Z]{2}$" },
-        "status": { "enum": ["pending", "completed", "failed"] },
+        "status": { "enum": ["pending", "completed", "failed", "refunded"] },
         "occurred_at": { "type": "string", "format": "date-time" },
         "device_id": {
           "oneOf": [

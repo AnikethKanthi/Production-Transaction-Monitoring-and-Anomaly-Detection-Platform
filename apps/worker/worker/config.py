@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     model_path: Path = Path("model-artifacts/isolation_forest.v1.joblib")
     model_metadata_path: Path = Path("model-artifacts/isolation_forest.v1.metadata.json")
     metrics_port: int = Field(default=9101, ge=1, le=65535)
+    redis_url: str = "redis://127.0.0.1:6379/0"
+    rolling_metrics_ttl_seconds: int = Field(default=7200, ge=60, le=604800)
     database_url: SecretStr | None = None
     postgres_host: str = "127.0.0.1"
     postgres_port: int = Field(default=5432, ge=1, le=65535)

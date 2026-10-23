@@ -19,7 +19,7 @@ def test_upgrade_downgrade_and_upgrade_again(
         "anomalies",
         "alembic_version",
     }
-    assert database_connection.scalar(text("SELECT version_num FROM alembic_version")) == "0004"
+    assert database_connection.scalar(text("SELECT version_num FROM alembic_version")) == "0005"
     database_connection.commit()
     command.check(alembic_config)
     database_connection.commit()

@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     postgres_db: str = "transactions"
     postgres_user: str = "monitoring"
     postgres_password: SecretStr = SecretStr("local-development-only")
+    redis_url: str = "redis://127.0.0.1:6379/0"
+    metrics_cache_ttl_seconds: int = Field(default=60, ge=1, le=3600)
+    rolling_metrics_ttl_seconds: int = Field(default=7200, ge=60, le=604800)
 
     @property
     def sqlalchemy_url(self) -> URL:

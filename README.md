@@ -107,6 +107,13 @@ scoring status, and inference latency for every processed transaction. If loadin
 fails, processing continues with the explicit `fallback.v1` score. Prometheus inference
 metrics are available from the worker on `http://127.0.0.1:9101/metrics` by default.
 
+Dashboard aggregates are available at `GET /metrics` for a requested time range and hourly or
+daily interval. `GET /metrics/rolling?window_minutes=60` serves Redis-backed minute buckets.
+Both responses include volume, amount, average amount, outcome rates, anomaly rate, latency,
+country breakdowns, and payment-method breakdowns. Database aggregate responses use a
+short-lived Redis cache configured by `METRICS_CACHE_TTL_SECONDS`; rolling buckets use
+`ROLLING_METRICS_TTL_SECONDS`.
+
 The development UI proxies requests to `http://127.0.0.1:8000`. Set
 `API_PROXY_TARGET` if the API runs at a different address. API liveness is independent
 of the database, but repository operations require a migrated PostgreSQL database.

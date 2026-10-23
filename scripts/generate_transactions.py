@@ -14,6 +14,8 @@ from worker.kafka.producer import TransactionEventProducer
 
 CURRENCIES = (("US", "USD"), ("GB", "GBP"), ("DE", "EUR"), ("CA", "CAD"))
 PAYMENT_METHODS = ("card", "bank_transfer", "wallet")
+STATUSES = ("completed", "failed", "refunded")
+STATUS_WEIGHTS = (0.82, 0.13, 0.05)
 
 
 def generate_event(randomizer: random.Random) -> TransactionEvent:
@@ -28,7 +30,7 @@ def generate_event(randomizer: random.Random) -> TransactionEvent:
             amount=Decimal(randomizer.randint(100, 250_000)) / 100,
             currency=currency,
             country=country,
-            status="completed",
+            status=randomizer.choices(STATUSES, weights=STATUS_WEIGHTS, k=1)[0],
             occurred_at=now,
             device_id=f"device-{randomizer.randint(1, 250):04d}",
             ip_address=f"198.51.100.{randomizer.randint(1, 254)}",

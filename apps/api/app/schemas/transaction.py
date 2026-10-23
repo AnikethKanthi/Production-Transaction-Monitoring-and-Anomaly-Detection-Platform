@@ -22,6 +22,7 @@ class TransactionStatus(StrEnum):
     pending = "pending"
     completed = "completed"
     failed = "failed"
+    refunded = "refunded"
 
 
 class TransactionCreate(BaseModel):

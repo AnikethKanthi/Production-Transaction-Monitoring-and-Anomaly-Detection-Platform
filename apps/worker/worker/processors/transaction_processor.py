@@ -1,5 +1,6 @@
 import logging
 from enum import StrEnum
+from typing import Protocol
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
@@ -10,6 +11,10 @@ from worker.processors.anomaly_processor import AnomalyProcessor
 from worker.processors.feature_processor import FeatureProcessor
 
 logger = logging.getLogger(__name__)
+
+
+class MetricsCounter(Protocol):
+    def record(self, transaction, score) -> None: ...
 
 
 class ProcessingResult(StrEnum):
@@ -23,12 +28,14 @@ class TransactionProcessor:
         session_factory: sessionmaker[Session],
         feature_processor: FeatureProcessor | None = None,
         anomaly_processor: AnomalyProcessor | None = None,
+        metrics_counter: MetricsCounter | None = None,
     ) -> None:
         self.session_factory = session_factory
         self.feature_processor = feature_processor or FeatureProcessor()
         self.anomaly_processor = anomaly_processor or AnomalyProcessor(
             None, load_error="anomaly processor was not configured"
         )
+        self.metrics_counter = metrics_counter
 
     def process(self, event: TransactionEvent) -> ProcessingResult:
         with self.session_factory.begin() as session:
@@ -76,4 +83,6 @@ class TransactionProcessor:
             event.data.transaction_id,
             event.data.status,
         )
+        if self.metrics_counter is not None:
+            self.metrics_counter.record(event.data, score)
         return ProcessingResult.processed

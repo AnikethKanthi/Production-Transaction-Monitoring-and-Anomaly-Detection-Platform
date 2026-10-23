@@ -14,7 +14,9 @@ class Transaction(Base):
         CheckConstraint("amount > 0", name="positive_amount"),
         CheckConstraint("currency ~ '^[A-Z]{3}$'", name="currency_code"),
         CheckConstraint("country ~ '^[A-Z]{2}$'", name="country_code"),
-        CheckConstraint("status IN ('pending', 'completed', 'failed')", name="valid_status"),
+        CheckConstraint(
+            "status IN ('pending', 'completed', 'failed', 'refunded')", name="valid_status"
+        ),
         Index("ix_transactions_occurred_at_id", "occurred_at", "id"),
         Index("ix_transactions_account_id_occurred_at", "account_id", "occurred_at"),
         Index("ix_transactions_status_occurred_at", "status", "occurred_at"),

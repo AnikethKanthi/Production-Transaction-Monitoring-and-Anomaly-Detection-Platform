@@ -97,6 +97,7 @@ services:
     environment:
       <<: *database-environment
       APP_NAME: Transaction Monitoring API
+      REDIS_URL: redis://redis:6379/0
     ports:
       - "127.0.0.1:${API_PORT:-8000}:8000"
     depends_on:
@@ -126,6 +127,8 @@ services:
       MODEL_PATH: /models/isolation_forest.v1.joblib
       MODEL_METADATA_PATH: /models/isolation_forest.v1.metadata.json
       METRICS_PORT: ${WORKER_METRICS_PORT:-9101}
+      REDIS_URL: redis://redis:6379/0
+      ROLLING_METRICS_TTL_SECONDS: ${ROLLING_METRICS_TTL_SECONDS:-7200}
     ports:
       - "127.0.0.1:${WORKER_METRICS_PORT:-9101}:9101"
     depends_on:
@@ -137,6 +140,8 @@ services:
         condition: service_healthy
       kafka-init:
         condition: service_completed_successfully
+      redis:
+        condition: service_healthy
     init: true
     stop_grace_period: 10s
 
