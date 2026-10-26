@@ -90,6 +90,10 @@ UUID as their key, which keeps events for the same transaction in one partition.
 
 ## Train the anomaly model
 
+Evaluate and tune the saved model with `python scripts/evaluate_threshold.py`.
+The versioned threshold sidecar and report record held-out precision, recall, F1, alert
+volume, error reviews, and segment candidates. See `docs/ml/threshold-strategy.md`.
+
 Install the API ML dependencies and run the deterministic training command:
 
 ```sh

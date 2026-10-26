@@ -23,10 +23,10 @@ DATA_START = datetime(2025, 1, 1, tzinfo=UTC)
 
 
 def generate_synthetic_dataset(
-    normal_count: int = 2000, anomaly_count: int = 200
+    normal_count: int = 2000, anomaly_count: int = 200, seed: int = RANDOM_SEED
 ) -> list[dict[str, Any]]:
     """Generate deterministic model-ready transactions with intentionally distinct anomalies."""
-    rng = np.random.default_rng(RANDOM_SEED)
+    rng = np.random.default_rng(seed)
     rows: list[dict[str, Any]] = []
     for index in range(normal_count + anomaly_count):
         anomalous = index >= normal_count

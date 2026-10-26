@@ -1,0 +1,21 @@
+{
+  "comparator": ">=",
+  "configuration_version": "anomaly_threshold.v1",
+  "dataset_sha256": "d1a99298fece3915c3bb1217f9fc01ddfa37c23a6f05925974b12f29f7ef5d47",
+  "deployment_status": "evaluated_candidate; existing worker scoring and metrics are unchanged",
+  "evaluation_version": "threshold_evaluation.v1",
+  "feature_definition_version": "transaction_features.v1",
+  "library_versions": {
+    "numpy": "2.5.4",
+    "scikit_learn": "1.9.1"
+  },
+  "maximum_calibration_alert_rate": 0.15,
+  "model_sha256": "c7dd46a3c9646a32292a473b62b2f6de1ae3c926c0584f3e216e551c55ea60ea",
+  "model_version": "isolation_forest.v1",
+  "score_definition": "negative decision_function; larger means more anomalous",
+  "seed": 20261026,
+  "segment_decision": "Global threshold retained: small synthetic segments cannot justify production overrides.",
+  "segment_overrides": {},
+  "selection": "maximize calibration F1 subject to alert_rate <= 0.15; ties prefer precision then higher threshold",
+  "threshold": 0.229602043777838
+}
