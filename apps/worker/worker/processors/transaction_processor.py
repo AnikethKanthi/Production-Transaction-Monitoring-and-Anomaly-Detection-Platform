@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from worker.events.transaction import TransactionEvent
 from worker.persistence.models import ProcessedEventRecord, TransactionRecord
+from worker.processors.alert_processor import AlertProcessor
 from worker.processors.anomaly_processor import AnomalyProcessor
 from worker.processors.feature_processor import FeatureProcessor
 
@@ -29,6 +30,7 @@ class TransactionProcessor:
         feature_processor: FeatureProcessor | None = None,
         anomaly_processor: AnomalyProcessor | None = None,
         metrics_counter: MetricsCounter | None = None,
+        alert_processor: AlertProcessor | None = None,
     ) -> None:
         self.session_factory = session_factory
         self.feature_processor = feature_processor or FeatureProcessor()
@@ -36,6 +38,7 @@ class TransactionProcessor:
             None, load_error="anomaly processor was not configured"
         )
         self.metrics_counter = metrics_counter
+        self.alert_processor = alert_processor or AlertProcessor()
 
     def process(self, event: TransactionEvent) -> ProcessingResult:
         with self.session_factory.begin() as session:
@@ -68,7 +71,9 @@ class TransactionProcessor:
             session.flush()
             self.feature_processor.store(session, event, features)
             score = self.anomaly_processor.score(features)
-            self.anomaly_processor.store(session, event.data.transaction_id, score)
+            anomaly = self.anomaly_processor.store(session, event.data.transaction_id, score)
+            session.flush()
+            self.alert_processor.store(session, event, anomaly.id, score, features)
             session.add(
                 ProcessedEventRecord(
                     event_id=event.event_id,

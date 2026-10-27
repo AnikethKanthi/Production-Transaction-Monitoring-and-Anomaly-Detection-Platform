@@ -56,9 +56,10 @@ explicit per-segment minimum support and alert-capacity targets.
 
 ## Deployment and reproducibility
 
-The sidecar is an evaluated candidate. This task does not change the worker's existing
-scoring or the metrics service's positive-score anomaly definition. Deployment must load
-the sidecar, verify its model hash/version and comparator, and explicitly update downstream
-alert classification to use it. Fallback scores must never be treated as model alerts.
+The threshold evaluation produces a candidate sidecar. The worker's `anomaly_alert.v1`
+policy now loads that sidecar through `ALERT_THRESHOLD_PATH`, verifies the model hash,
+feature version and comparator, and applies it to persisted alerts. The metrics service's
+positive-score anomaly definition remains separate. See `alert-policies.md` for severity
+bands and activation behavior. Fallback scores never qualify as model alerts.
 Reruns in the recorded environment reproduce dataset, split, sweep, metrics, reviews, and
 configuration byte for byte. Timing and current timestamps are intentionally excluded.

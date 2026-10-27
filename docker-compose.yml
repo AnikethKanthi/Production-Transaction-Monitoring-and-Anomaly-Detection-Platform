@@ -126,6 +126,7 @@ services:
       KAFKA_RETRY_BACKOFF_SECONDS: ${KAFKA_RETRY_BACKOFF_SECONDS:-0.5}
       MODEL_PATH: /models/isolation_forest.v1.joblib
       MODEL_METADATA_PATH: /models/isolation_forest.v1.metadata.json
+      ALERT_THRESHOLD_PATH: /models/isolation_forest.v1.threshold.json
       METRICS_PORT: ${WORKER_METRICS_PORT:-9101}
       REDIS_URL: redis://redis:6379/0
       ROLLING_METRICS_TTL_SECONDS: ${ROLLING_METRICS_TTL_SECONDS:-7200}

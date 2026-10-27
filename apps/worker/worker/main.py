@@ -10,6 +10,7 @@ from worker.consumers.transaction_consumer import TransactionConsumer
 from worker.logging import configure_logging
 from worker.monitoring.rolling_metrics import RollingMetricsCounter
 from worker.persistence.database import get_session_factory
+from worker.processors.alert_processor import AlertPolicy, AlertProcessor
 from worker.processors.anomaly_processor import AnomalyProcessor
 from worker.processors.transaction_processor import TransactionProcessor
 
@@ -17,6 +18,9 @@ from worker.processors.transaction_processor import TransactionProcessor
 def run(stop: Event, settings: Settings, consumer: TransactionConsumer | None = None) -> None:
     logger = logging.getLogger(__name__)
     anomaly_processor = AnomalyProcessor.load(settings.model_path, settings.model_metadata_path)
+    alert_processor = AlertProcessor(
+        AlertPolicy.load(settings.alert_threshold_path, settings.model_path)
+    )
     metrics_counter = RollingMetricsCounter(
         Redis.from_url(settings.redis_url, decode_responses=True),
         settings.rolling_metrics_ttl_seconds,
@@ -27,6 +31,7 @@ def run(stop: Event, settings: Settings, consumer: TransactionConsumer | None = 
             get_session_factory(settings),
             anomaly_processor=anomaly_processor,
             metrics_counter=metrics_counter,
+            alert_processor=alert_processor,
         ).process,
     )
     logger.info("Transaction consumer starting")

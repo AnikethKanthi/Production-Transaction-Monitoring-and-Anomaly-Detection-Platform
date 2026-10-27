@@ -17,9 +17,10 @@ def test_upgrade_downgrade_and_upgrade_again(
         "processed_events",
         "inference_features",
         "anomalies",
+        "alerts",
         "alembic_version",
     }
-    assert database_connection.scalar(text("SELECT version_num FROM alembic_version")) == "0005"
+    assert database_connection.scalar(text("SELECT version_num FROM alembic_version")) == "0006"
     database_connection.commit()
     command.check(alembic_config)
     database_connection.commit()
@@ -66,3 +67,11 @@ def test_indexes_and_event_primary_key(migrated_connection: Connection) -> None:
     anomaly_foreign_key = inspector.get_foreign_keys("anomalies")[0]
     assert anomaly_foreign_key["referred_table"] == "transactions"
     assert anomaly_foreign_key["options"]["ondelete"] == "CASCADE"
+    assert {item["name"] for item in inspector.get_indexes("alerts")} == {
+        "ix_alerts_transaction_id",
+        "ix_alerts_anomaly_id",
+        "ix_alerts_event_id",
+        "ix_alerts_severity",
+        "ix_alerts_created_at",
+        "uq_alerts_transaction_policy",
+    }

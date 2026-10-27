@@ -90,6 +90,9 @@ UUID as their key, which keeps events for the same transaction in one partition.
 
 ## Train the anomaly model
 
+The worker converts qualifying scores into deduplicated alerts with Low, Medium, High,
+or Critical severity and evidence. See `docs/ml/alert-policies.md` for rules and activation.
+
 Evaluate and tune the saved model with `python scripts/evaluate_threshold.py`.
 The versioned threshold sidecar and report record held-out precision, recall, F1, alert
 volume, error reviews, and segment candidates. See `docs/ml/threshold-strategy.md`.

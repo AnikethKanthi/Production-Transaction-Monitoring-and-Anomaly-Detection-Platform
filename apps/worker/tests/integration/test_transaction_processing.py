@@ -10,14 +10,40 @@ from sqlalchemy.orm import Session, sessionmaker
 from worker.consumers.transaction_consumer import TransactionConsumer
 from worker.events.transaction import TransactionData, TransactionEvent, serialize_transaction_event
 from worker.persistence.models import (
+    AlertRecord,
     AnomalyRecord,
     InferenceFeatureRecord,
     ProcessedEventRecord,
     TransactionRecord,
 )
+from worker.processors.alert_processor import AlertPolicy, AlertProcessor
+from worker.processors.anomaly_processor import AnomalyProcessor
 from worker.processors.transaction_processor import ProcessingResult, TransactionProcessor
 
 pytestmark = pytest.mark.integration
+
+
+class AlertingModel:
+    def decision_function(self, values):
+        return [-0.4]
+
+
+def test_qualifying_event_creates_one_alert_on_postgres(session_factory) -> None:
+    transaction_event = event()
+    processor = TransactionProcessor(
+        session_factory,
+        anomaly_processor=AnomalyProcessor(AlertingModel(), "fixture.v1"),
+        alert_processor=AlertProcessor(AlertPolicy("fixture.v1", 0.2)),
+    )
+    assert processor.process(transaction_event) == ProcessingResult.processed
+    assert processor.process(transaction_event) == ProcessingResult.duplicate
+    with session_factory() as session:
+        assert session.scalar(select(func.count()).select_from(AlertRecord)) == 1
+        alert = session.scalar(select(AlertRecord))
+        anomaly = session.scalar(select(AnomalyRecord))
+        assert alert.anomaly_id == anomaly.id
+        assert alert.severity == "critical"
+        assert "threshold" in alert.evidence["reasons"][0]
 
 
 def event() -> TransactionEvent:
