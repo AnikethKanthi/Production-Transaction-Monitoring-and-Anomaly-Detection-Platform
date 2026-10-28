@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 
 from worker.events.transaction import TransactionEvent
 from worker.features.transaction_v1 import FEATURE_DEFINITION_VERSION, TransactionFeatureVector
-from worker.persistence.models import AlertRecord
+from worker.persistence.models import AlertAuditRecord, AlertRecord
 from worker.processors.anomaly_processor import ScoreResult
 
 logger = logging.getLogger(__name__)
@@ -136,4 +136,18 @@ class AlertProcessor:
             .on_conflict_do_nothing(index_elements=["transaction_id", "policy_version"])
         )
         result = session.execute(statement)
-        return result.rowcount == 1
+        created = result.rowcount == 1
+        if created:
+            session.add(
+                AlertAuditRecord(
+                    id=uuid4(),
+                    alert_id=values["id"],
+                    version=1,
+                    action="create",
+                    actor="system:anomaly-worker",
+                    reason="; ".join(evidence["reasons"]),
+                    before=None,
+                    after={"status": "open", "assignee": None, "version": 1},
+                )
+            )
+        return created

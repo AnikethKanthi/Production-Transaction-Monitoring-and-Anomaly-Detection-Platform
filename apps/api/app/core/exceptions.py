@@ -2,10 +2,18 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from app.services.alert_service import AlertWorkflowError
 from app.services.transaction_service import TransactionNotFoundError
 
 
 def register_exception_handlers(app: FastAPI) -> None:
+    @app.exception_handler(AlertWorkflowError)
+    async def alert_workflow_error(_request: Request, error: AlertWorkflowError) -> JSONResponse:
+        return JSONResponse(
+            status_code=error.status_code,
+            content={"error": {"code": error.code, "message": error.message}},
+        )
+
     @app.exception_handler(TransactionNotFoundError)
     async def transaction_not_found(
         _request: Request, error: TransactionNotFoundError

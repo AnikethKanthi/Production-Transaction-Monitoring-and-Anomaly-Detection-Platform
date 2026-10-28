@@ -6,14 +6,23 @@ from redis import Redis
 from sqlalchemy.orm import Session
 
 from app.core.config import Settings
+from app.db.repositories.alerts import AlertRepository
 from app.db.repositories.metrics import MetricsRepository
 from app.db.repositories.transactions import TransactionRepository
 from app.db.session import get_session
+from app.services.alert_service import AlertService
 from app.services.metrics_service import MetricsCache, MetricsService
 from app.services.rolling_metrics import RollingMetricsService
 from app.services.transaction_service import TransactionService
 
 DatabaseSession = Annotated[Session, Depends(get_session, scope="function")]
+
+
+def get_alert_service(session: DatabaseSession) -> AlertService:
+    return AlertService(AlertRepository(session))
+
+
+AlertServiceDependency = Annotated[AlertService, Depends(get_alert_service)]
 
 
 def get_transaction_service(session: DatabaseSession) -> TransactionService:

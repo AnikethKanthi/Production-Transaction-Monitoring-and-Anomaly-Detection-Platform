@@ -11,6 +11,7 @@ from sqlalchemy.orm import sessionmaker
 from worker.events.transaction import TransactionData, TransactionEvent
 from worker.features.transaction_v1 import TransactionFeatureVector
 from worker.persistence.models import (
+    AlertAuditRecord,
     AlertRecord,
     AnomalyRecord,
     Base,
@@ -88,6 +89,11 @@ def test_alert_is_atomic_and_replay_or_repeat_policy_does_not_duplicate(factory)
             stored_features,
         )
         assert session.scalar(select(func.count()).select_from(AlertRecord)) == 1
+        history = list(session.scalars(select(AlertAuditRecord)))
+        assert len(history) == 1
+        assert history[0].action == "create"
+        assert history[0].version == 1
+        assert history[0].after == {"status": "open", "assignee": None, "version": 1}
         assert session.scalar(select(func.count()).select_from(ProcessedEventRecord)) == 1
 
 
@@ -105,7 +111,13 @@ def test_alert_storage_failure_rolls_back_entire_event(factory) -> None:
     with pytest.raises(RuntimeError, match="alert storage failed"):
         processor.process(transaction_event())
     with factory() as session:
-        for table in (TransactionRecord, AnomalyRecord, AlertRecord, ProcessedEventRecord):
+        for table in (
+            TransactionRecord,
+            AnomalyRecord,
+            AlertRecord,
+            AlertAuditRecord,
+            ProcessedEventRecord,
+        ):
             assert session.scalar(select(func.count()).select_from(table)) == 0
 
 

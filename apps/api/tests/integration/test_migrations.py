@@ -1,10 +1,63 @@
+from datetime import UTC, datetime
+from uuid import uuid4
+
 import pytest
 from alembic.config import Config
-from sqlalchemy import Connection, inspect, text
+from sqlalchemy import Connection, MetaData, Table, inspect, select, text
 
 from alembic import command
 
 pytestmark = pytest.mark.integration
+
+
+def test_existing_alert_gets_import_audit(alembic_config, database_connection):
+    command.upgrade(alembic_config, "0006")
+    metadata = MetaData()
+    transactions = Table("transactions", metadata, autoload_with=database_connection)
+    anomalies = Table("anomalies", metadata, autoload_with=database_connection)
+    alerts = Table("alerts", metadata, autoload_with=database_connection)
+    transaction_id, anomaly_id, alert_id = uuid4(), uuid4(), uuid4()
+    database_connection.execute(
+        transactions.insert().values(
+            id=transaction_id,
+            account_id="migration-test",
+            amount=100,
+            currency="USD",
+            country="US",
+            status="completed",
+            occurred_at=datetime.now(UTC),
+        )
+    )
+    database_connection.execute(
+        anomalies.insert().values(
+            id=anomaly_id,
+            transaction_id=transaction_id,
+            score=0.4,
+            model_version="test.v1",
+            scoring_status="scored",
+            inference_latency_seconds=0.01,
+        )
+    )
+    database_connection.execute(
+        alerts.insert().values(
+            id=alert_id,
+            transaction_id=transaction_id,
+            anomaly_id=anomaly_id,
+            event_id=uuid4(),
+            severity="high",
+            policy_version="test.v1",
+            model_version="test.v1",
+            evidence={},
+        )
+    )
+    database_connection.commit()
+    command.upgrade(alembic_config, "head")
+    audit = Table("alert_audit", MetaData(), autoload_with=database_connection)
+    imported = database_connection.execute(select(audit)).mappings().one()
+    assert imported["alert_id"] == alert_id
+    assert imported["action"] == "import"
+    assert imported["version"] == 1
+    assert imported["after"] == {"status": "open", "assignee": None, "version": 1}
 
 
 def test_upgrade_downgrade_and_upgrade_again(
@@ -18,9 +71,10 @@ def test_upgrade_downgrade_and_upgrade_again(
         "inference_features",
         "anomalies",
         "alerts",
+        "alert_audit",
         "alembic_version",
     }
-    assert database_connection.scalar(text("SELECT version_num FROM alembic_version")) == "0006"
+    assert database_connection.scalar(text("SELECT version_num FROM alembic_version")) == "0007"
     database_connection.commit()
     command.check(alembic_config)
     database_connection.commit()
@@ -73,5 +127,6 @@ def test_indexes_and_event_primary_key(migrated_connection: Connection) -> None:
         "ix_alerts_event_id",
         "ix_alerts_severity",
         "ix_alerts_created_at",
+        "ix_alerts_status",
         "uq_alerts_transaction_policy",
     }
