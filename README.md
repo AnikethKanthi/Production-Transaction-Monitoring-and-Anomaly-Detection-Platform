@@ -164,6 +164,10 @@ See [the data model](docs/architecture/data-model.md) for table definitions and 
 
 ## Validate
 
+Prometheus runs locally at `http://127.0.0.1:9090` and scrapes the API and worker.
+Structured JSON logs include correlation IDs and transaction/event IDs. See
+`docs/runbooks/observability.md` for metrics, PromQL queries, and tracing instructions.
+
 From the root, using the active virtual environment:
 
 ```sh

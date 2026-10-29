@@ -6,6 +6,7 @@
   "additionalProperties": false,
   "required": ["event_id", "event_type", "event_version", "produced_at", "data"],
   "properties": {
+    "correlation_id": { "type": ["string", "null"], "pattern": "^[A-Za-z0-9._-]{1,128}$" },
     "event_id": { "type": "string", "format": "uuid" },
     "event_type": { "const": "transaction.created" },
     "event_version": { "const": 1 },

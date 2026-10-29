@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
@@ -5,6 +6,8 @@ from uuid import UUID
 from app.db.repositories.transactions import TransactionRepository
 from app.models import Transaction
 from app.schemas.transaction import TransactionCreate, TransactionStatus
+
+logger = logging.getLogger(__name__)
 
 
 class TransactionNotFoundError(Exception):
@@ -17,12 +20,15 @@ class TransactionService:
         self.repository = repository
 
     def create(self, payload: TransactionCreate) -> Transaction:
-        return self.repository.add(Transaction(**payload.model_dump(mode="python")))
+        transaction = self.repository.add(Transaction(**payload.model_dump(mode="python")))
+        logger.info("Transaction created", extra={"transaction_id": str(transaction.id)})
+        return transaction
 
     def get(self, transaction_id: UUID) -> Transaction:
         transaction = self.repository.get(transaction_id)
         if transaction is None:
             raise TransactionNotFoundError(transaction_id)
+        logger.info("Transaction retrieved", extra={"transaction_id": str(transaction_id)})
         return transaction
 
     def list(

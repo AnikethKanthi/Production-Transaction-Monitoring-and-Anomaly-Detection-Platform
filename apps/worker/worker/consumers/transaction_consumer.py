@@ -12,6 +12,13 @@ from worker.events.dead_letter import DeadLetterEvent
 from worker.events.transaction import TransactionEvent, deserialize_transaction_event
 from worker.kafka.dead_letter_producer import DeadLetterProducer
 from worker.kafka.topics import TRANSACTIONS_TOPIC
+from worker.logging import event_context
+from worker.monitoring.metrics import (
+    WORKER_EVENTS,
+    WORKER_LATENCY,
+    WORKER_RETRIES,
+    kafka_statistics,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +63,8 @@ class TransactionConsumer:
                 "group.id": settings.kafka_consumer_group,
                 "auto.offset.reset": "earliest",
                 "enable.auto.commit": False,
+                "statistics.interval.ms": 10000,
+                "stats_cb": kafka_statistics,
             }
         )
         dead_letter_producer = DeadLetterProducer.connect(settings.kafka_bootstrap_servers)
@@ -84,6 +93,10 @@ class TransactionConsumer:
             self.consumer.close()
 
     def _handle(self, message: Message) -> None:
+        with WORKER_LATENCY.time():
+            self._handle_message(message)
+
+    def _handle_message(self, message: Message) -> None:
         payload = self._payload_bytes(message.value())
         try:
             event = deserialize_transaction_event(payload)
@@ -93,16 +106,36 @@ class TransactionConsumer:
                 message.topic(),
                 message.partition(),
                 message.offset(),
-                error,
+                type(error).__name__,
             )
             self._publish_dead_letter(message, payload, error, attempts=1)
             self.consumer.commit(message=message, asynchronous=False)
+            WORKER_EVENTS.labels(outcome="rejected").inc()
             return
+
+        with event_context(event):
+            logger.info(
+                "Kafka transaction received",
+                extra={
+                    "topic": TRANSACTIONS_TOPIC,
+                    "partition": message.partition(),
+                    "offset": message.offset(),
+                },
+            )
+            try:
+                self._process_event(event, message, payload)
+            except Exception:
+                logger.exception("Kafka transaction handling failed before completion")
+                raise
+
+    def _process_event(self, event, message, payload):
 
         for attempt in range(1, self.max_processing_attempts + 1):
             try:
-                self.processor(event)
+                result = self.processor(event)
+                outcome = "duplicate" if result == "duplicate" else "processed"
             except Exception as error:
+                WORKER_RETRIES.inc()
                 logger.exception(
                     "Transaction processing failed event_id=%s attempt=%s/%s",
                     event.event_id,
@@ -115,7 +148,10 @@ class TransactionConsumer:
                 self._publish_dead_letter(
                     message, payload, error, attempts=attempt, event_id=event.event_id
                 )
+                outcome = "dead_lettered"
             self.consumer.commit(message=message, asynchronous=False)
+            WORKER_EVENTS.labels(outcome=outcome).inc()
+            logger.info("Kafka transaction handled: %s", outcome)
             return
 
     def _publish_dead_letter(

@@ -138,6 +138,9 @@ class AlertProcessor:
         result = session.execute(statement)
         created = result.rowcount == 1
         if created:
+            logger.info(
+                "Alert created: severity=%s alert_id=%s", evidence["severity"], values["id"]
+            )
             session.add(
                 AlertAuditRecord(
                     id=uuid4(),

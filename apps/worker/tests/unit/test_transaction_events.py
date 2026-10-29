@@ -77,7 +77,11 @@ def test_producer_uses_transaction_id_as_partition_key() -> None:
     _, kwargs = client.produce.call_args
     assert client.produce.call_args.args == (TRANSACTIONS_TOPIC,)
     assert kwargs["key"] == str(transaction_event.data.transaction_id).encode()
-    assert deserialize_transaction_event(kwargs["value"]) == transaction_event
+    published = deserialize_transaction_event(kwargs["value"])
+    assert published == transaction_event.model_copy(
+        update={"correlation_id": str(transaction_event.event_id)}
+    )
+    assert kwargs["headers"]["x-correlation-id"] == str(transaction_event.event_id)
 
 
 def test_producer_reports_delivery_timeout() -> None:

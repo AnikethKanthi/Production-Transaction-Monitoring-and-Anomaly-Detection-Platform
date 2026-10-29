@@ -127,7 +127,7 @@ services:
       MODEL_PATH: /models/isolation_forest.v1.joblib
       MODEL_METADATA_PATH: /models/isolation_forest.v1.metadata.json
       ALERT_THRESHOLD_PATH: /models/isolation_forest.v1.threshold.json
-      METRICS_PORT: ${WORKER_METRICS_PORT:-9101}
+      METRICS_PORT: 9101
       REDIS_URL: redis://redis:6379/0
       ROLLING_METRICS_TTL_SECONDS: ${ROLLING_METRICS_TTL_SECONDS:-7200}
     ports:
@@ -154,6 +154,19 @@ services:
     depends_on:
       api:
         condition: service_healthy
+
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    command: ["--config.file=/etc/prometheus/prometheus.yml"]
+    ports:
+      - "127.0.0.1:${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      api:
+        condition: service_healthy
+      worker:
+        condition: service_started
 
 volumes:
   postgres_data:

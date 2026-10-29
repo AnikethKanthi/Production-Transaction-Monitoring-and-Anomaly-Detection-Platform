@@ -80,8 +80,9 @@ class AnomalyProcessor:
             reason = _failure_reason(error)
             logger.warning("Anomaly scoring failed; stored fallback score: %s", reason)
         latency = time.perf_counter() - started
-        INFERENCE_LATENCY.labels(model_version=model_version, status=status).observe(latency)
-        INFERENCE_RESULTS.labels(model_version=model_version, status=status).inc()
+        INFERENCE_LATENCY.labels(status=status).observe(latency)
+        INFERENCE_RESULTS.labels(status=status).inc()
+        logger.info("Model inference completed: status=%s model_version=%s", status, model_version)
         return ScoreResult(score, model_version, status, reason, latency)
 
     def store(self, session: Session, transaction_id, result: ScoreResult) -> AnomalyRecord:

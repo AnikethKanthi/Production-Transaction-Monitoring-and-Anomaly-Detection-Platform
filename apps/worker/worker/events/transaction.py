@@ -49,6 +49,7 @@ class TransactionEvent(BaseModel):
     event_type: Literal["transaction.created"] = "transaction.created"
     event_version: Literal[1] = 1
     produced_at: datetime
+    correlation_id: str | None = Field(default=None, pattern=r"^[A-Za-z0-9._-]{1,128}$")
     data: TransactionData
 
     @field_validator("produced_at")
