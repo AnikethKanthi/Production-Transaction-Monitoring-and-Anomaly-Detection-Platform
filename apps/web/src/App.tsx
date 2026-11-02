@@ -5,16 +5,25 @@ import {
   Outlet,
   Route,
   Routes,
+  useLocation,
 } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { getHealth } from './api/client';
 import { EmptyState, LoadingState } from './components/ui';
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const TransactionsPage = lazy(() => import('./pages/TransactionsPage'));
 const AlertsPage = lazy(() => import('./pages/AlertsPage'));
+const TransactionDetailsPage = lazy(
+  () => import('./pages/TransactionDetailsPage'),
+);
+const AlertDetailsPage = lazy(() => import('./pages/AlertDetailsPage'));
 
 function Layout() {
+  const location = useLocation();
+  useEffect(() => {
+    document.getElementById('main-content')?.focus();
+  }, [location.pathname]);
   const health = useQuery({
     queryKey: ['health'],
     queryFn: ({ signal }) => getHealth(signal),
@@ -82,7 +91,9 @@ export default function App() {
         <Route element={<Layout />}>
           <Route index element={<DashboardPage />} />
           <Route path="transactions" element={<TransactionsPage />} />
+          <Route path="transactions/:id" element={<TransactionDetailsPage />} />
           <Route path="alerts" element={<AlertsPage />} />
+          <Route path="alerts/:id" element={<AlertDetailsPage />} />
           <Route
             path="*"
             element={

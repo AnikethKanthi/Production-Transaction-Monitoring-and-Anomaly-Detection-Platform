@@ -168,6 +168,9 @@ The React dashboard at `/` displays live metrics, transaction volume, status dis
 and anomaly trends. Navigation links to Transactions and Alerts. See
 `docs/runbooks/frontend-dashboard.md` for API configuration, query behavior, and UI tests.
 
+Transaction search and sorting, URL-preserved filters, score/evidence details, and alert
+acknowledge/assign/resolve actions are documented in `docs/runbooks/operator-investigation.md`.
+
 Prometheus runs locally at `http://127.0.0.1:9090` and scrapes the API and worker.
 Structured JSON logs include correlation IDs and transaction/event IDs. See
 `docs/runbooks/observability.md` for metrics, PromQL queries, and tracing instructions.

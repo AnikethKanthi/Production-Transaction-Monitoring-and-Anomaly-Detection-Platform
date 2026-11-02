@@ -2,8 +2,12 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Path, Query, status
+from sqlalchemy import select
 
 from app.api.dependencies import TransactionServiceDependency
+from app.models import Alert, Anomaly
+from app.schemas.alert import AlertRead
+from app.schemas.investigation import AnomalyRead, TransactionInvestigation
 from app.schemas.transaction import (
     ErrorResponse,
     PaginationMeta,
@@ -73,3 +77,24 @@ def get_transaction(
     service: TransactionServiceDependency,
 ) -> TransactionRead:
     return TransactionRead.model_validate(service.get(transaction_id))
+
+
+@router.get(
+    "/{transaction_id}/investigation",
+    response_model=TransactionInvestigation,
+    responses={404: not_found_response},
+)
+def investigate_transaction(transaction_id: UUID, service: TransactionServiceDependency):
+    transaction = service.get(transaction_id)
+    session = service.repository.session
+    anomaly = session.scalar(select(Anomaly).where(Anomaly.transaction_id == transaction_id))
+    alerts = session.scalars(
+        select(Alert)
+        .where(Alert.transaction_id == transaction_id)
+        .order_by(Alert.created_at.desc(), Alert.id.desc())
+    )
+    return TransactionInvestigation(
+        transaction=TransactionRead.model_validate(transaction),
+        anomaly=AnomalyRead.model_validate(anomaly) if anomaly is not None else None,
+        alerts=[AlertRead.model_validate(item) for item in alerts],
+    )

@@ -13,12 +13,14 @@ class AlertRepository:
     def get(self, alert_id: UUID) -> Alert | None:
         return self.session.get(Alert, alert_id)
 
-    def list(self, status=None, severity=None, limit=50, offset=0):
+    def list(self, status=None, severity=None, limit=50, offset=0, transaction_id=None):
         statement = select(Alert)
         if status is not None:
             statement = statement.where(Alert.status == status)
         if severity is not None:
             statement = statement.where(Alert.severity == severity)
+        if transaction_id is not None:
+            statement = statement.where(Alert.transaction_id == transaction_id)
         total = self.session.scalar(select(func.count()).select_from(statement.subquery())) or 0
         items = list(
             self.session.scalars(

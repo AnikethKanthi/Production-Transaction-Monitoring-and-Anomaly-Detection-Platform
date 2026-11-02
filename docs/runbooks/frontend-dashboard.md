@@ -28,9 +28,10 @@ remains visible and is explicitly marked as last-successful data. No production 
 or silent fixture fallback is included. A healthy API does not guarantee database availability;
 the health indicator and metric request errors are shown independently.
 
-Transactions includes a paginated ledger. Alerts includes the latest 50 matching alerts and
-a status filter. These are read-only navigation views; investigation actions remain available
-through the existing API. Dashboard chart data is also available as a text table. Navigation,
+Transactions includes URL-backed search, sorting, filters, pagination, and investigation details.
+Alerts includes a filtered, paginated queue, evidence, audit history, and investigation actions.
+See `operator-investigation.md` for the operator workflow. Dashboard chart data is also
+available as a text table. Navigation,
 filters, and controls support keyboard focus. Layouts adapt at desktop and tablet widths,
 and motion effects respect reduced-motion preferences.
 

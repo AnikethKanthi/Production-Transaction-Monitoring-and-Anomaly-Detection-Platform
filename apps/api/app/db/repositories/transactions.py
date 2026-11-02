@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import Select, func, select
+from sqlalchemy import Select, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.models import Transaction
@@ -33,6 +33,9 @@ class TransactionRepository:
         occurred_to: datetime | None = None,
         limit: int = 100,
         offset: int = 0,
+        search: str | None = None,
+        sort_by: str = "occurred_at",
+        sort_order: str = "desc",
     ) -> tuple[list[Transaction], int]:
         if not 1 <= limit <= 1000 or offset < 0:
             raise ValueError("limit must be 1..1000 and offset must be nonnegative")
@@ -46,9 +49,32 @@ class TransactionRepository:
             occurred_from=occurred_from,
             occurred_to=occurred_to,
         )
+        if search:
+            term = search.strip()
+            conditions = [
+                func.lower(Transaction.account_id).contains(term.lower(), autoescape=True),
+                func.lower(Transaction.merchant_id).contains(term.lower(), autoescape=True),
+            ]
+            try:
+                conditions.append(Transaction.id == UUID(term))
+            except ValueError:
+                pass
+            statement = statement.where(or_(*conditions))
+        allowed = {
+            "occurred_at": Transaction.occurred_at,
+            "amount": Transaction.amount,
+            "status": Transaction.status,
+            "country": Transaction.country,
+        }
+        if sort_by not in allowed or sort_order not in {"asc", "desc"}:
+            raise ValueError("unsupported transaction sort")
         count_statement = select(func.count()).select_from(statement.order_by(None).subquery())
         total = self.session.scalar(count_statement) or 0
-        statement = statement.order_by(Transaction.occurred_at.desc(), Transaction.id.desc())
+        column = allowed[sort_by]
+        statement = statement.order_by(
+            column.asc() if sort_order == "asc" else column.desc(),
+            Transaction.id.asc() if sort_order == "asc" else Transaction.id.desc(),
+        )
         items = list(self.session.scalars(statement.limit(limit).offset(offset)))
         return items, total
 

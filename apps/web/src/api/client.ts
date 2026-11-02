@@ -19,21 +19,44 @@ export async function apiGet<T>(
   path: string,
   signal?: AbortSignal,
 ): Promise<T> {
+  return apiRequest<T>(path, { method: 'GET' }, signal);
+}
+
+export function apiPost<T>(path: string, body: unknown): Promise<T> {
+  return apiRequest<T>(path, { method: 'POST', body: JSON.stringify(body) });
+}
+
+async function apiRequest<T>(
+  path: string,
+  options: RequestInit,
+  signal?: AbortSignal,
+): Promise<T> {
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 8000);
   try {
     const response = await fetch(`/api${path}`, {
+      ...options,
       signal: signal
         ? AbortSignal.any([signal, controller.signal])
         : controller.signal,
-      headers: { Accept: 'application/json' },
+      headers: {
+        Accept: 'application/json',
+        ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      },
     });
-    if (!response.ok)
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as {
+        error?: { message?: string };
+      } | null;
       throw new ApiError(
-        `API request failed (HTTP ${response.status}). Check the API service and try again.`,
+        response.status === 409
+          ? 'This alert changed or the action is no longer allowed. Reload the latest details before trying again.'
+          : (body?.error?.message ??
+            `API request failed (HTTP ${response.status}). Check the API service and try again.`),
         response.status,
         response.headers.get('x-correlation-id') ?? undefined,
       );
+    }
     return (await response.json()) as T;
   } catch (error) {
     if (error instanceof ApiError) throw error;

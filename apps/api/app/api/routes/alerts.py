@@ -33,8 +33,9 @@ def list_alerts(
     severity: AlertSeverity | None = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
+    transaction_id: UUID | None = None,
 ) -> AlertList:
-    items, total = service.repository.list(status, severity, limit, offset)
+    items, total = service.repository.list(status, severity, limit, offset, transaction_id)
     return AlertList(
         items=[AlertRead.model_validate(item) for item in items],
         pagination=PaginationMeta(limit=limit, offset=offset, total=total),

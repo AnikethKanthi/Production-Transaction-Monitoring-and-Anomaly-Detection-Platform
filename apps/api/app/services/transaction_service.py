@@ -43,6 +43,9 @@ class TransactionService:
         occurred_to: datetime | None,
         limit: int,
         offset: int,
+        search: str | None = None,
+        sort_by: str = "occurred_at",
+        sort_order: str = "desc",
     ) -> tuple[list[Transaction], int]:
         return self.repository.list(
             status=status.value if status else None,
@@ -54,4 +57,7 @@ class TransactionService:
             occurred_to=occurred_to,
             limit=limit,
             offset=offset,
+            search=search,
+            sort_by=sort_by,
+            sort_order=sort_order,
         )

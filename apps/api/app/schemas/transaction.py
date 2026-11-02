@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from pydantic import (
@@ -77,6 +77,9 @@ class TransactionFilters(BaseModel):
     occurred_to: datetime | None = None
     limit: int = Field(default=50, ge=1, le=100)
     offset: int = Field(default=0, ge=0)
+    search: str | None = Field(default=None, min_length=1, max_length=128)
+    sort_by: Literal["occurred_at", "amount", "status", "country"] = "occurred_at"
+    sort_order: Literal["asc", "desc"] = "desc"
 
     @field_validator("occurred_from", "occurred_to")
     @classmethod
