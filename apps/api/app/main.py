@@ -2,6 +2,7 @@ from fastapi import FastAPI, Response
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 from app.api.router import router
+from app.core.business_metrics import snapshot
 from app.core.config import Settings
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import configure_logging
@@ -18,3 +19,8 @@ app.include_router(router)
 @app.get("/metrics/prometheus", include_in_schema=False)
 def prometheus_metrics() -> Response:
     return Response(generate_latest(), headers={"content-type": CONTENT_TYPE_LATEST})
+
+
+@app.get("/metrics/business", include_in_schema=False)
+def business_metrics() -> Response:
+    return Response(snapshot(), headers={"content-type": CONTENT_TYPE_LATEST})

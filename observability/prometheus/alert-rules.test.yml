@@ -1,0 +1,629 @@
+{
+  "rule_files": [
+    "alert-rules.yml"
+  ],
+  "evaluation_interval": "1m",
+  "tests": [
+    {
+      "name": "APIUnavailable",
+      "interval": "1m",
+      "input_series": [
+        {
+          "series": "up{job=\"api\"}",
+          "values": "0+0x20"
+        }
+      ],
+      "alert_rule_test": [
+        {
+          "eval_time": "0m",
+          "alertname": "APIUnavailable",
+          "exp_alerts": []
+        },
+        {
+          "eval_time": "16m",
+          "alertname": "APIUnavailable",
+          "exp_alerts": [
+            {
+              "exp_labels": {
+                "severity": "critical",
+                "job": "api"
+              },
+              "exp_annotations": {
+                "summary": "APIUnavailable",
+                "runbook_url": "https://github.com/AnikethKanthi/Production-Transaction-Monitoring-and-Anomaly-Detection-Platform/blob/main/docs/runbooks/operational-alerts.md"
+              }
+            }
+          ]
+        },
+        {
+          "eval_time": "30m",
+          "alertname": "APIUnavailable",
+          "exp_alerts": []
+        }
+      ]
+    },
+    {
+      "name": "APIErrorSpike",
+      "interval": "1m",
+      "input_series": [
+        {
+          "series": "api_http_requests_total{status_code=\"500\"}",
+          "values": "0+60x20"
+        },
+        {
+          "series": "api_http_requests_total{status_code=\"200\"}",
+          "values": "0+60x20"
+        }
+      ],
+      "alert_rule_test": [
+        {
+          "eval_time": "0m",
+          "alertname": "APIErrorSpike",
+          "exp_alerts": []
+        },
+        {
+          "eval_time": "16m",
+          "alertname": "APIErrorSpike",
+          "exp_alerts": [
+            {
+              "exp_labels": {
+                "severity": "critical"
+              },
+              "exp_annotations": {
+                "summary": "APIErrorSpike",
+                "runbook_url": "https://github.com/AnikethKanthi/Production-Transaction-Monitoring-and-Anomaly-Detection-Platform/blob/main/docs/runbooks/operational-alerts.md"
+              }
+            }
+          ]
+        },
+        {
+          "eval_time": "30m",
+          "alertname": "APIErrorSpike",
+          "exp_alerts": []
+        }
+      ]
+    },
+    {
+      "name": "APIHighLatency",
+      "interval": "1m",
+      "input_series": [
+        {
+          "series": "api_http_request_duration_seconds_bucket{le=\"1\"}",
+          "values": "0+0x20"
+        },
+        {
+          "series": "api_http_request_duration_seconds_bucket{le=\"2\"}",
+          "values": "0+100x20"
+        },
+        {
+          "series": "api_http_request_duration_seconds_bucket{le=\"+Inf\"}",
+          "values": "0+100x20"
+        }
+      ],
+      "alert_rule_test": [
+        {
+          "eval_time": "0m",
+          "alertname": "APIHighLatency",
+          "exp_alerts": []
+        },
+        {
+          "eval_time": "16m",
+          "alertname": "APIHighLatency",
+          "exp_alerts": [
+            {
+              "exp_labels": {
+                "severity": "warning"
+              },
+              "exp_annotations": {
+                "summary": "APIHighLatency",
+                "runbook_url": "https://github.com/AnikethKanthi/Production-Transaction-Monitoring-and-Anomaly-Detection-Platform/blob/main/docs/runbooks/operational-alerts.md"
+              }
+            }
+          ]
+        },
+        {
+          "eval_time": "30m",
+          "alertname": "APIHighLatency",
+          "exp_alerts": []
+        }
+      ]
+    },
+    {
+      "name": "KafkaConsumerLag",
+      "interval": "1m",
+      "input_series": [
+        {
+          "series": "worker_kafka_consumer_lag",
+          "values": "2000+0x20"
+        },
+        {
+          "series": "worker_kafka_lag_known_partitions",
+          "values": "3+0x20"
+        },
+        {
+          "series": "worker_kafka_statistics_timestamp_seconds",
+          "values": "0+60x20"
+        }
+      ],
+      "alert_rule_test": [
+        {
+          "eval_time": "0m",
+          "alertname": "KafkaConsumerLag",
+          "exp_alerts": []
+        },
+        {
+          "eval_time": "16m",
+          "alertname": "KafkaConsumerLag",
+          "exp_alerts": [
+            {
+              "exp_labels": {
+                "severity": "warning"
+              },
+              "exp_annotations": {
+                "summary": "KafkaConsumerLag",
+                "runbook_url": "https://github.com/AnikethKanthi/Production-Transaction-Monitoring-and-Anomaly-Detection-Platform/blob/main/docs/runbooks/operational-alerts.md"
+              }
+            }
+          ]
+        },
+        {
+          "eval_time": "30m",
+          "alertname": "KafkaConsumerLag",
+          "exp_alerts": []
+        }
+      ]
+    },
+    {
+      "name": "KafkaLagUnavailable",
+      "interval": "1m",
+      "input_series": [
+        {
+          "series": "up{job=\"worker\"}",
+          "values": "1+0x20"
+        },
+        {
+          "series": "worker_kafka_statistics_timestamp_seconds",
+          "values": "0+0x20"
+        }
+      ],
+      "alert_rule_test": [
+        {
+          "eval_time": "0m",
+          "alertname": "KafkaLagUnavailable",
+          "exp_alerts": []
+        },
+        {
+          "eval_time": "16m",
+          "alertname": "KafkaLagUnavailable",
+          "exp_alerts": [
+            {
+              "exp_labels": {
+                "severity": "warning"
+              },
+              "exp_annotations": {
+                "summary": "KafkaLagUnavailable",
+                "runbook_url": "https://github.com/AnikethKanthi/Production-Transaction-Monitoring-and-Anomaly-Detection-Platform/blob/main/docs/runbooks/operational-alerts.md"
+              }
+            }
+          ]
+        },
+        {
+          "eval_time": "30m",
+          "alertname": "KafkaLagUnavailable",
+          "exp_alerts": []
+        }
+      ]
+    },
+    {
+      "name": "WorkerUnavailable",
+      "interval": "1m",
+      "input_series": [
+        {
+          "series": "up{job=\"worker\"}",
+          "values": "0+0x20"
+        }
+      ],
+      "alert_rule_test": [
+        {
+          "eval_time": "0m",
+          "alertname": "WorkerUnavailable",
+          "exp_alerts": []
+        },
+        {
+          "eval_time": "16m",
+          "alertname": "WorkerUnavailable",
+          "exp_alerts": [
+            {
+              "exp_labels": {
+                "severity": "critical",
+                "job": "worker"
+              },
+              "exp_annotations": {
+                "summary": "WorkerUnavailable",
+                "runbook_url": "https://github.com/AnikethKanthi/Production-Transaction-Monitoring-and-Anomaly-Detection-Platform/blob/main/docs/runbooks/operational-alerts.md"
+              }
+            }
+          ]
+        },
+        {
+          "eval_time": "30m",
+          "alertname": "WorkerUnavailable",
+          "exp_alerts": []
+        }
+      ]
+    },
+    {
+      "name": "WorkerFailures",
+      "interval": "1m",
+      "input_series": [
+        {
+          "series": "worker_processing_failures_total",
+          "values": "0+10x20"
+        }
+      ],
+      "alert_rule_test": [
+        {
+          "eval_time": "0m",
+          "alertname": "WorkerFailures",
+          "exp_alerts": []
+        },
+        {
+          "eval_time": "16m",
+          "alertname": "WorkerFailures",
+          "exp_alerts": [
+            {
+              "exp_labels": {
+                "severity": "warning"
+              },
+              "exp_annotations": {
+                "summary": "WorkerFailures",
+                "runbook_url": "https://github.com/AnikethKanthi/Production-Transaction-Monitoring-and-Anomaly-Detection-Platform/blob/main/docs/runbooks/operational-alerts.md"
+              }
+            }
+          ]
+        },
+        {
+          "eval_time": "30m",
+          "alertname": "WorkerFailures",
+          "exp_alerts": []
+        }
+      ]
+    },
+    {
+      "name": "NoIncomingTransactions",
+      "interval": "1m",
+      "input_series": [
+        {
+          "series": "platform_transactions_5m",
+          "values": "0+0x20"
+        },
+        {
+          "series": "platform_database_up",
+          "values": "1+0x20"
+        }
+      ],
+      "alert_rule_test": [
+        {
+          "eval_time": "0m",
+          "alertname": "NoIncomingTransactions",
+          "exp_alerts": []
+        },
+        {
+          "eval_time": "16m",
+          "alertname": "NoIncomingTransactions",
+          "exp_alerts": [
+            {
+              "exp_labels": {
+                "severity": "warning"
+              },
+              "exp_annotations": {
+                "summary": "NoIncomingTransactions",
+                "runbook_url": "https://github.com/AnikethKanthi/Production-Transaction-Monitoring-and-Anomaly-Detection-Platform/blob/main/docs/runbooks/operational-alerts.md"
+              }
+            }
+          ]
+        },
+        {
+          "eval_time": "30m",
+          "alertname": "NoIncomingTransactions",
+          "exp_alerts": []
+        }
+      ]
+    },
+    {
+      "name": "DatabaseConnectionFailure",
+      "interval": "1m",
+      "input_series": [
+        {
+          "series": "platform_database_up",
+          "values": "0+0x20"
+        }
+      ],
+      "alert_rule_test": [
+        {
+          "eval_time": "0m",
+          "alertname": "DatabaseConnectionFailure",
+          "exp_alerts": []
+        },
+        {
+          "eval_time": "16m",
+          "alertname": "DatabaseConnectionFailure",
+          "exp_alerts": [
+            {
+              "exp_labels": {
+                "severity": "critical"
+              },
+              "exp_annotations": {
+                "summary": "DatabaseConnectionFailure",
+                "runbook_url": "https://github.com/AnikethKanthi/Production-Transaction-Monitoring-and-Anomaly-Detection-Platform/blob/main/docs/runbooks/operational-alerts.md"
+              }
+            }
+          ]
+        },
+        {
+          "eval_time": "30m",
+          "alertname": "DatabaseConnectionFailure",
+          "exp_alerts": []
+        }
+      ]
+    },
+    {
+      "name": "BusinessMetricsUnavailable",
+      "interval": "1m",
+      "input_series": [
+        {
+          "series": "up{job=\"business\"}",
+          "values": "0+0x20"
+        }
+      ],
+      "alert_rule_test": [
+        {
+          "eval_time": "0m",
+          "alertname": "BusinessMetricsUnavailable",
+          "exp_alerts": []
+        },
+        {
+          "eval_time": "16m",
+          "alertname": "BusinessMetricsUnavailable",
+          "exp_alerts": [
+            {
+              "exp_labels": {
+                "severity": "critical",
+                "job": "business"
+              },
+              "exp_annotations": {
+                "summary": "BusinessMetricsUnavailable",
+                "runbook_url": "https://github.com/AnikethKanthi/Production-Transaction-Monitoring-and-Anomaly-Detection-Platform/blob/main/docs/runbooks/operational-alerts.md"
+              }
+            }
+          ]
+        },
+        {
+          "eval_time": "30m",
+          "alertname": "BusinessMetricsUnavailable",
+          "exp_alerts": []
+        }
+      ]
+    },
+    {
+      "name": "AnomalySpike",
+      "interval": "1m",
+      "input_series": [
+        {
+          "series": "platform_anomalies_5m",
+          "values": "30+0x20"
+        },
+        {
+          "series": "platform_scored_5m",
+          "values": "100+0x20"
+        }
+      ],
+      "alert_rule_test": [
+        {
+          "eval_time": "0m",
+          "alertname": "AnomalySpike",
+          "exp_alerts": []
+        },
+        {
+          "eval_time": "16m",
+          "alertname": "AnomalySpike",
+          "exp_alerts": [
+            {
+              "exp_labels": {
+                "severity": "warning"
+              },
+              "exp_annotations": {
+                "summary": "AnomalySpike",
+                "runbook_url": "https://github.com/AnikethKanthi/Production-Transaction-Monitoring-and-Anomaly-Detection-Platform/blob/main/docs/runbooks/operational-alerts.md"
+              }
+            }
+          ]
+        },
+        {
+          "eval_time": "30m",
+          "alertname": "AnomalySpike",
+          "exp_alerts": []
+        }
+      ]
+    },
+    {
+      "name": "healthy and idle with database unavailable",
+      "interval": "1m",
+      "input_series": [
+        {
+          "series": "up{job=\"api\"}",
+          "values": "1+0x30"
+        },
+        {
+          "series": "up{job=\"worker\"}",
+          "values": "1+0x30"
+        },
+        {
+          "series": "up{job=\"business\"}",
+          "values": "1+0x30"
+        },
+        {
+          "series": "platform_database_up",
+          "values": "1+0x30"
+        },
+        {
+          "series": "platform_transactions_5m",
+          "values": "10+0x30"
+        },
+        {
+          "series": "platform_scored_5m",
+          "values": "10+0x30"
+        },
+        {
+          "series": "platform_anomalies_5m",
+          "values": "1+0x30"
+        },
+        {
+          "series": "worker_kafka_lag_known_partitions",
+          "values": "3+0x30"
+        },
+        {
+          "series": "worker_kafka_statistics_timestamp_seconds",
+          "values": "0+60x30"
+        },
+        {
+          "series": "worker_kafka_consumer_lag",
+          "values": "0+0x30"
+        }
+      ],
+      "alert_rule_test": [
+        {
+          "eval_time": "20m",
+          "alertname": "APIUnavailable",
+          "exp_alerts": []
+        },
+        {
+          "eval_time": "20m",
+          "alertname": "APIErrorSpike",
+          "exp_alerts": []
+        },
+        {
+          "eval_time": "20m",
+          "alertname": "APIHighLatency",
+          "exp_alerts": []
+        },
+        {
+          "eval_time": "20m",
+          "alertname": "KafkaConsumerLag",
+          "exp_alerts": []
+        },
+        {
+          "eval_time": "20m",
+          "alertname": "KafkaLagUnavailable",
+          "exp_alerts": []
+        },
+        {
+          "eval_time": "20m",
+          "alertname": "WorkerUnavailable",
+          "exp_alerts": []
+        },
+        {
+          "eval_time": "20m",
+          "alertname": "WorkerFailures",
+          "exp_alerts": []
+        },
+        {
+          "eval_time": "20m",
+          "alertname": "NoIncomingTransactions",
+          "exp_alerts": []
+        },
+        {
+          "eval_time": "20m",
+          "alertname": "DatabaseConnectionFailure",
+          "exp_alerts": []
+        },
+        {
+          "eval_time": "20m",
+          "alertname": "BusinessMetricsUnavailable",
+          "exp_alerts": []
+        },
+        {
+          "eval_time": "20m",
+          "alertname": "AnomalySpike",
+          "exp_alerts": []
+        }
+      ]
+    },
+    {
+      "name": "Suppress no-traffic when database fails",
+      "interval": "1m",
+      "input_series": [
+        {
+          "series": "platform_database_up",
+          "values": "0+0x30"
+        },
+        {
+          "series": "platform_transactions_5m",
+          "values": "0+0x30"
+        }
+      ],
+      "alert_rule_test": [
+        {
+          "eval_time": "20m",
+          "alertname": "NoIncomingTransactions",
+          "exp_alerts": []
+        }
+      ]
+    },
+    {
+      "name": "Suppress high ratio at low volume",
+      "interval": "1m",
+      "input_series": [
+        {
+          "series": "platform_scored_5m",
+          "values": "10+0x30"
+        },
+        {
+          "series": "platform_anomalies_5m",
+          "values": "10+0x30"
+        },
+        {
+          "series": "api_http_requests_total{status_code=\"500\"}",
+          "values": "0+1x30"
+        }
+      ],
+      "alert_rule_test": [
+        {
+          "eval_time": "20m",
+          "alertname": "AnomalySpike",
+          "exp_alerts": []
+        },
+        {
+          "eval_time": "20m",
+          "alertname": "APIErrorSpike",
+          "exp_alerts": []
+        }
+      ]
+    },
+    {
+      "name": "Stale Kafka measurements are not backlog evidence",
+      "interval": "1m",
+      "input_series": [
+        {
+          "series": "worker_kafka_consumer_lag",
+          "values": "2000+0x30"
+        },
+        {
+          "series": "worker_kafka_lag_known_partitions",
+          "values": "3+0x30"
+        },
+        {
+          "series": "worker_kafka_statistics_timestamp_seconds",
+          "values": "0+0x30"
+        }
+      ],
+      "alert_rule_test": [
+        {
+          "eval_time": "20m",
+          "alertname": "KafkaConsumerLag",
+          "exp_alerts": []
+        }
+      ]
+    }
+  ]
+}

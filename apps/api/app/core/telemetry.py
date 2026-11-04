@@ -60,7 +60,7 @@ class TelemetryMiddleware:
                 if scope["method"] in {"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
                 else "OTHER"
             )
-            if route != "/metrics/prometheus":
+            if route not in {"/metrics/prometheus", "/metrics/business"}:
                 REQUESTS.labels(method, route, str(status_code)).inc()
                 LATENCY.labels(method, route).observe(elapsed)
                 logger.info(

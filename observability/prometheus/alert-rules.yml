@@ -1,0 +1,141 @@
+{
+  "groups": [
+    {
+      "name": "platform",
+      "rules": [
+        {
+          "alert": "APIUnavailable",
+          "expr": "up{job=\"api\"} == 0",
+          "for": "1m",
+          "labels": {
+            "severity": "critical"
+          },
+          "annotations": {
+            "summary": "APIUnavailable",
+            "runbook_url": "https://github.com/AnikethKanthi/Production-Transaction-Monitoring-and-Anomaly-Detection-Platform/blob/main/docs/runbooks/operational-alerts.md"
+          }
+        },
+        {
+          "alert": "APIErrorSpike",
+          "expr": "(sum(rate(api_http_requests_total{status_code=~\"5..\"}[5m])) / clamp_min(sum(rate(api_http_requests_total[5m])), 0.000001)) > 0.05 and sum(rate(api_http_requests_total[5m])) > 0.1",
+          "for": "2m",
+          "labels": {
+            "severity": "critical"
+          },
+          "annotations": {
+            "summary": "APIErrorSpike",
+            "runbook_url": "https://github.com/AnikethKanthi/Production-Transaction-Monitoring-and-Anomaly-Detection-Platform/blob/main/docs/runbooks/operational-alerts.md"
+          }
+        },
+        {
+          "alert": "APIHighLatency",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(api_http_request_duration_seconds_bucket[5m]))) > 1",
+          "for": "5m",
+          "labels": {
+            "severity": "warning"
+          },
+          "annotations": {
+            "summary": "APIHighLatency",
+            "runbook_url": "https://github.com/AnikethKanthi/Production-Transaction-Monitoring-and-Anomaly-Detection-Platform/blob/main/docs/runbooks/operational-alerts.md"
+          }
+        },
+        {
+          "alert": "KafkaConsumerLag",
+          "expr": "worker_kafka_consumer_lag > 1000 and worker_kafka_lag_known_partitions > 0 and (time() - worker_kafka_statistics_timestamp_seconds) < 60",
+          "for": "5m",
+          "labels": {
+            "severity": "warning"
+          },
+          "annotations": {
+            "summary": "KafkaConsumerLag",
+            "runbook_url": "https://github.com/AnikethKanthi/Production-Transaction-Monitoring-and-Anomaly-Detection-Platform/blob/main/docs/runbooks/operational-alerts.md"
+          }
+        },
+        {
+          "alert": "KafkaLagUnavailable",
+          "expr": "max(up{job=\"worker\"}) == 1 and on() ((time() - max(worker_kafka_statistics_timestamp_seconds)) > 60 or max(worker_kafka_lag_known_partitions) == 0 or absent(worker_kafka_statistics_timestamp_seconds) or absent(worker_kafka_lag_known_partitions))",
+          "for": "5m",
+          "labels": {
+            "severity": "warning"
+          },
+          "annotations": {
+            "summary": "KafkaLagUnavailable",
+            "runbook_url": "https://github.com/AnikethKanthi/Production-Transaction-Monitoring-and-Anomaly-Detection-Platform/blob/main/docs/runbooks/operational-alerts.md"
+          }
+        },
+        {
+          "alert": "WorkerUnavailable",
+          "expr": "up{job=\"worker\"} == 0",
+          "for": "1m",
+          "labels": {
+            "severity": "critical"
+          },
+          "annotations": {
+            "summary": "WorkerUnavailable",
+            "runbook_url": "https://github.com/AnikethKanthi/Production-Transaction-Monitoring-and-Anomaly-Detection-Platform/blob/main/docs/runbooks/operational-alerts.md"
+          }
+        },
+        {
+          "alert": "WorkerFailures",
+          "expr": "sum(increase(worker_processing_failures_total[5m])) > 5",
+          "for": "2m",
+          "labels": {
+            "severity": "warning"
+          },
+          "annotations": {
+            "summary": "WorkerFailures",
+            "runbook_url": "https://github.com/AnikethKanthi/Production-Transaction-Monitoring-and-Anomaly-Detection-Platform/blob/main/docs/runbooks/operational-alerts.md"
+          }
+        },
+        {
+          "alert": "NoIncomingTransactions",
+          "expr": "sum(platform_transactions_5m) == 0 and min(platform_database_up) == 1",
+          "for": "10m",
+          "labels": {
+            "severity": "warning"
+          },
+          "annotations": {
+            "summary": "NoIncomingTransactions",
+            "runbook_url": "https://github.com/AnikethKanthi/Production-Transaction-Monitoring-and-Anomaly-Detection-Platform/blob/main/docs/runbooks/operational-alerts.md"
+          }
+        },
+        {
+          "alert": "DatabaseConnectionFailure",
+          "expr": "platform_database_up == 0",
+          "for": "1m",
+          "labels": {
+            "severity": "critical"
+          },
+          "annotations": {
+            "summary": "DatabaseConnectionFailure",
+            "runbook_url": "https://github.com/AnikethKanthi/Production-Transaction-Monitoring-and-Anomaly-Detection-Platform/blob/main/docs/runbooks/operational-alerts.md"
+          }
+        },
+        {
+          "alert": "BusinessMetricsUnavailable",
+          "expr": "up{job=\"business\"} == 0",
+          "for": "1m",
+          "labels": {
+            "severity": "critical"
+          },
+          "annotations": {
+            "summary": "BusinessMetricsUnavailable",
+            "runbook_url": "https://github.com/AnikethKanthi/Production-Transaction-Monitoring-and-Anomaly-Detection-Platform/blob/main/docs/runbooks/operational-alerts.md"
+          }
+        },
+        {
+          "alert": "AnomalySpike",
+          "expr": "(sum(platform_anomalies_5m) / clamp_min(sum(platform_scored_5m), 1)) > 0.2 and sum(platform_scored_5m) >= 20",
+          "for": "5m",
+          "labels": {
+            "severity": "warning"
+          },
+          "annotations": {
+            "summary": "AnomalySpike",
+            "runbook_url": "https://github.com/AnikethKanthi/Production-Transaction-Monitoring-and-Anomaly-Detection-Platform/blob/main/docs/runbooks/operational-alerts.md"
+          }
+        }
+      ]
+    }
+  ]
+}

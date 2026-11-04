@@ -200,7 +200,7 @@ on pull requests or manual dispatch. These workflows run when changes reach GitH
 - `apps/web`: React, TypeScript, Vite, and the Nginx production proxy.
 - `contracts/events`: versioned JSON Schema event contracts and examples.
 - `infra`: database initialization, Kafka scripts, and Dockerfile mirrors.
-- `observability`: reserved Prometheus and Grafana configuration.
+- `observability`: provisioned Grafana dashboards, Prometheus scrapes and tested alert rules.
 - `data`: generated synthetic and processed training datasets.
 - `model-artifacts`: versioned models, metadata, and evaluation reports.
 - `scripts`: local helpers including the HTTP smoke test.

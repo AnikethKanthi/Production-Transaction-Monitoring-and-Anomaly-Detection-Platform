@@ -1,0 +1,16 @@
+{
+  "apiVersion": 1,
+  "providers": [
+    {
+      "name": "platform",
+      "folder": "Transaction Monitoring",
+      "type": "file",
+      "disableDeletion": false,
+      "allowUiUpdates": false,
+      "updateIntervalSeconds": 30,
+      "options": {
+        "path": "/var/lib/grafana/dashboards"
+      }
+    }
+  ]
+}

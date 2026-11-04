@@ -21,6 +21,7 @@ class Transaction(Base):
         Index("ix_transactions_account_id_occurred_at", "account_id", "occurred_at"),
         Index("ix_transactions_status_occurred_at", "status", "occurred_at"),
         Index("ix_transactions_country_occurred_at", "country", "occurred_at"),
+        Index("ix_transactions_created_at", "created_at"),
     )
 
     id: Mapped[UUID] = mapped_column(

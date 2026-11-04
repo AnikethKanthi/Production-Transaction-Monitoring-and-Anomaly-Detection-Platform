@@ -74,7 +74,7 @@ def test_upgrade_downgrade_and_upgrade_again(
         "alert_audit",
         "alembic_version",
     }
-    assert database_connection.scalar(text("SELECT version_num FROM alembic_version")) == "0007"
+    assert database_connection.scalar(text("SELECT version_num FROM alembic_version")) == "0008"
     database_connection.commit()
     command.check(alembic_config)
     database_connection.commit()
@@ -92,6 +92,7 @@ def test_indexes_and_event_primary_key(migrated_connection: Connection) -> None:
         index["name"]: index["column_names"] for index in inspector.get_indexes("transactions")
     }
     assert indexes == {
+        "ix_transactions_created_at": ["created_at"],
         "ix_transactions_occurred_at_id": ["occurred_at", "id"],
         "ix_transactions_account_id_occurred_at": ["account_id", "occurred_at"],
         "ix_transactions_status_occurred_at": ["status", "occurred_at"],

@@ -9,6 +9,24 @@ permissions:
   contents: read
 
 jobs:
+  monitoring:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate operational alert rules
+        run: |
+          docker run --rm --entrypoint promtool -v "$PWD/observability/prometheus:/etc/prometheus" prom/prometheus:v3.2.1 check config /etc/prometheus/prometheus.yml
+          docker run --rm --entrypoint promtool -v "$PWD/observability/prometheus:/rules" -w /rules prom/prometheus:v3.2.1 check rules alert-rules.yml
+          docker run --rm --entrypoint promtool -v "$PWD/observability/prometheus:/rules" -w /rules prom/prometheus:v3.2.1 test rules alert-rules.test.yml
+      - name: Validate Compose
+        run: docker compose config --quiet
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate provisioned dashboards and panel queries
+        run: |
+          curl -fsSL https://github.com/prometheus/prometheus/releases/download/v3.2.1/prometheus-3.2.1.linux-amd64.tar.gz | tar -xz -C "$RUNNER_TEMP"
+          python scripts/check_monitoring.py --promtool "$RUNNER_TEMP/prometheus-3.2.1.linux-amd64/promtool"
   python:
     runs-on: ubuntu-latest
     strategy:

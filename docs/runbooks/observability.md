@@ -1,5 +1,8 @@
 # Logs and Prometheus
 
+For provisioned Grafana dashboards, operational rule thresholds, failure tests, and
+first-response guidance, see [operational alerts](operational-alerts.md).
+
 Run `docker compose up --build -d` to include Prometheus, then open
 `http://127.0.0.1:9090/targets`. Both `api` and `worker` targets should be UP.
 The configuration scrapes every 15 seconds, using API `/metrics/prometheus` on internal
