@@ -81,10 +81,11 @@ def test_processor_failure_is_retried_then_dead_lettered() -> None:
         max_processing_attempts=3,
         retry_backoff_seconds=0.1,
         sleeper=sleeper,
+        random_source=lambda: 0.5,
     )._handle(kafka_message)
 
     assert processor.call_count == 3
-    assert [call.args[0] for call in sleeper.call_args_list] == [0.1, 0.2]
+    assert [call.args[0] for call in sleeper.call_args_list] == [0.05, 0.1]
     assert dead_letter.call_args.args[0].attempts == 3
     client.commit.assert_called_once_with(message=kafka_message, asynchronous=False)
 

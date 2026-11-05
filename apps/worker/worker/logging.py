@@ -5,6 +5,8 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from datetime import UTC, datetime
 
+from worker.redaction import redact
+
 log_context: ContextVar[dict] = ContextVar("worker_log_context", default={})
 
 
@@ -44,8 +46,8 @@ class JsonFormatter(logging.Formatter):
             if hasattr(record, name):
                 entry[name] = getattr(record, name)
         if record.exc_info:
-            entry["exception"] = self.formatException(record.exc_info)
-        return json.dumps(entry, default=str, allow_nan=False)
+            entry["exception"] = type(record.exc_info[1]).__name__
+        return json.dumps(redact(entry), default=str, allow_nan=False)
 
 
 def configure_logging() -> None:
@@ -53,3 +55,6 @@ def configure_logging() -> None:
     handler.setFormatter(JsonFormatter())
     logging.getLogger().handlers = [handler]
     logging.getLogger().setLevel(logging.INFO)
+    for name in ("httpx", "httpcore", "sqlalchemy.engine"):
+        logging.getLogger(name).handlers = [logging.NullHandler()]
+        logging.getLogger(name).propagate = False

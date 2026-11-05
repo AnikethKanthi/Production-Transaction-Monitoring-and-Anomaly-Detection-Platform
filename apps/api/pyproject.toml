@@ -28,7 +28,7 @@ namespaces = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["integration: requires PostgreSQL via TEST_DATABASE_URL"]
+markers = ["integration: requires PostgreSQL via TEST_DATABASE_URL", "security: exercises real authentication and request protection"]
 
 [tool.ruff]
 target-version = "py312"

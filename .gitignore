@@ -1,4 +1,6 @@
 # Local environment and secrets
+.local/
+*.token
 .env
 .env.*
 !.env.example

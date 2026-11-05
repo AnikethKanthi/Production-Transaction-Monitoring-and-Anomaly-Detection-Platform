@@ -27,6 +27,7 @@ class TransactionStatus(StrEnum):
 
 class TransactionCreate(BaseModel):
     model_config = ConfigDict(
+        extra="forbid",
         json_schema_extra={
             "examples": [
                 {
@@ -43,7 +44,7 @@ class TransactionCreate(BaseModel):
                     "order_amount": "149.95",
                 }
             ]
-        }
+        },
     )
 
     account_id: Identifier

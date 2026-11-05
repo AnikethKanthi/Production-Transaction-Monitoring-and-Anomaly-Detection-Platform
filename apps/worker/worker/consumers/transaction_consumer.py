@@ -1,4 +1,5 @@
 import logging
+import random
 import time
 from collections.abc import Callable
 from threading import Event
@@ -44,6 +45,7 @@ class TransactionConsumer:
         max_processing_attempts: int = 3,
         retry_backoff_seconds: float = 0.5,
         sleeper: Callable[[float], None] = time.sleep,
+        random_source: Callable[[], float] = random.random,
     ) -> None:
         self.consumer = consumer
         self.processor = processor
@@ -52,6 +54,7 @@ class TransactionConsumer:
         self.max_processing_attempts = max_processing_attempts
         self.retry_backoff_seconds = retry_backoff_seconds
         self.sleeper = sleeper
+        self.random_source = random_source
 
     @classmethod
     def from_settings(
@@ -65,6 +68,11 @@ class TransactionConsumer:
                 "enable.auto.commit": False,
                 "statistics.interval.ms": 10000,
                 "stats_cb": kafka_statistics,
+                "socket.timeout.ms": 5000,
+                "session.timeout.ms": 10000,
+                "max.poll.interval.ms": 300000,
+                "reconnect.backoff.ms": 250,
+                "reconnect.backoff.max.ms": 10000,
             }
         )
         dead_letter_producer = DeadLetterProducer.connect(settings.kafka_bootstrap_servers)
@@ -79,15 +87,34 @@ class TransactionConsumer:
 
     def run(self, stop: Event) -> None:
         self.consumer.subscribe([TRANSACTIONS_TOPIC])
+        failures = 0
         try:
             while not stop.is_set():
-                message = self.consumer.poll(self.poll_timeout)
+                try:
+                    message = self.consumer.poll(self.poll_timeout)
+                except KafkaException as error:
+                    if (
+                        error.args
+                        and isinstance(error.args[0], KafkaError)
+                        and error.args[0].fatal()
+                    ):
+                        raise
+                    failures += 1
+                    logger.warning("Kafka poll unavailable; waiting before retry")
+                    stop.wait(min(30, 0.5 * (2 ** min(failures, 6))) * self.random_source())
+                    continue
                 if message is None:
                     continue
                 if message.error():
                     if message.error().code() == KafkaError._PARTITION_EOF:
                         continue
-                    raise KafkaException(message.error())
+                    if message.error().fatal():
+                        raise KafkaException(message.error())
+                    failures += 1
+                    logger.warning("Kafka poll error; waiting before retry")
+                    stop.wait(min(30, 0.5 * (2 ** min(failures, 6))) * self.random_source())
+                    continue
+                failures = 0
                 self._handle(message)
         finally:
             self.consumer.close()
@@ -143,7 +170,11 @@ class TransactionConsumer:
                     self.max_processing_attempts,
                 )
                 if attempt < self.max_processing_attempts:
-                    self.sleeper(self.retry_backoff_seconds * (2 ** (attempt - 1)))
+                    # Full jitter, capped so ten configured attempts remain bounded.
+                    self.sleeper(
+                        min(30, self.retry_backoff_seconds * (2 ** (attempt - 1)))
+                        * self.random_source()
+                    )
                     continue
                 self._publish_dead_letter(
                     message, payload, error, attempts=attempt, event_id=event.event_id

@@ -4,6 +4,8 @@ import sys
 from contextvars import ContextVar
 from datetime import UTC, datetime
 
+from app.core.redaction import redact
+
 request_id: ContextVar[str | None] = ContextVar("request_id", default=None)
 
 
@@ -28,8 +30,8 @@ class JsonFormatter(logging.Formatter):
             if hasattr(record, name):
                 entry[name] = getattr(record, name)
         if record.exc_info:
-            entry["exception"] = self.formatException(record.exc_info)
-        return json.dumps(entry, default=str, allow_nan=False)
+            entry["exception"] = type(record.exc_info[1]).__name__
+        return json.dumps(redact(entry), default=str, allow_nan=False)
 
 
 def configure_logging() -> None:
@@ -40,3 +42,7 @@ def configure_logging() -> None:
     for name in ("uvicorn", "uvicorn.error", "uvicorn.access"):
         logging.getLogger(name).handlers = []
         logging.getLogger(name).propagate = True
+    # Access logs contain raw URLs/query strings. Application telemetry logs route templates.
+    for name in ("uvicorn.access", "httpx", "httpcore", "sqlalchemy.engine"):
+        logging.getLogger(name).handlers = [logging.NullHandler()]
+        logging.getLogger(name).propagate = False

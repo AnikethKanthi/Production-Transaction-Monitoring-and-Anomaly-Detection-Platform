@@ -42,7 +42,7 @@ class DeadLetterEvent(BaseModel):
             event_id=event_id,
             attempts=attempts,
             error_type=type(error).__name__,
-            error_message=str(error),
+            error_message="Event processing failed; see error_type and correlated logs",
         )
 
 

@@ -4,6 +4,11 @@ export interface HealthResponse {
   version: string;
 }
 
+let bearerToken: string | null = null;
+export function setBearerToken(token: string | null) {
+  bearerToken = token;
+}
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -41,10 +46,15 @@ async function apiRequest<T>(
         : controller.signal,
       headers: {
         Accept: 'application/json',
+        ...(bearerToken ? { Authorization: `Bearer ${bearerToken}` } : {}),
         ...(options.body ? { 'Content-Type': 'application/json' } : {}),
       },
     });
     if (!response.ok) {
+      if (response.status === 401) {
+        bearerToken = null;
+        window.dispatchEvent(new Event('auth-expired'));
+      }
       const body = (await response.json().catch(() => null)) as {
         error?: { message?: string };
       } | null;

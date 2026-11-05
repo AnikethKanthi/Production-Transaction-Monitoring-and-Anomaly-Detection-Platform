@@ -1,10 +1,11 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Path, Query, status
+from fastapi import APIRouter, Depends, Path, Query, status
 from sqlalchemy import select
 
 from app.api.dependencies import TransactionServiceDependency
+from app.core.security import require_administrator
 from app.models import Alert, Anomaly
 from app.schemas.alert import AlertRead
 from app.schemas.investigation import AnomalyRead, TransactionInvestigation
@@ -42,6 +43,7 @@ validation_response = {"model": ErrorResponse, "description": "Request validatio
     status_code=status.HTTP_201_CREATED,
     responses={422: validation_response},
     summary="Create a transaction",
+    dependencies=[Depends(require_administrator)],
 )
 def create_transaction(
     payload: TransactionCreate, service: TransactionServiceDependency

@@ -3,6 +3,8 @@ from typing import Annotated
 
 from fastapi import Depends
 from redis import Redis
+from redis.backoff import NoBackoff
+from redis.retry import Retry
 from sqlalchemy.orm import Session
 
 from app.core.config import Settings
@@ -34,7 +36,15 @@ TransactionServiceDependency = Annotated[TransactionService, Depends(get_transac
 
 @lru_cache
 def get_redis() -> Redis:
-    return Redis.from_url(Settings().redis_url, decode_responses=True)
+    settings = Settings()
+    return Redis.from_url(
+        settings.redis_url,
+        decode_responses=True,
+        socket_connect_timeout=settings.redis_timeout_seconds,
+        socket_timeout=settings.redis_timeout_seconds,
+        retry_on_timeout=False,
+        retry=Retry(NoBackoff(), 0),
+    )
 
 
 def get_metrics_service(session: DatabaseSession) -> MetricsService:

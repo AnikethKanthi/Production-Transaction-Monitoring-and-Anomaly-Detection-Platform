@@ -1,4 +1,7 @@
 from datetime import UTC, datetime
+from unittest.mock import Mock
+
+from redis.exceptions import ConnectionError as RedisConnectionError
 
 from app.services.metrics_service import MetricsCache, MetricsService
 
@@ -38,6 +41,20 @@ class FixtureRepository:
             "by_payment_method": [summary | {"label": "card"}],
             "time_series": [summary | {"label": start}],
         }
+
+
+def test_redis_outage_still_returns_database_results():
+    redis = Mock()
+    redis.get.side_effect = RedisConnectionError("Redis unavailable")
+    redis.setex.side_effect = RedisConnectionError("Redis unavailable")
+    repository = FixtureRepository()
+    service = MetricsService(repository, MetricsCache(redis, 60))
+    result = service.dashboard(
+        datetime(2026, 1, 1, tzinfo=UTC), datetime(2026, 1, 2, tzinfo=UTC), "hour", "USD"
+    )
+    assert result.source == "database"
+    assert result.overall.transaction_count == 4
+    assert repository.calls == 1
 
 
 def test_database_metrics_are_cached_with_expiration() -> None:

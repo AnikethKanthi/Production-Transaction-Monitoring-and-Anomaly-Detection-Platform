@@ -1,3 +1,4 @@
+import { signIn, visitAuthenticated } from './auth-helper';
 import { expect, test, type Page } from '@playwright/test';
 import type { AuditEntry } from '../api/investigations';
 
@@ -140,7 +141,7 @@ test('finds transactions using URL filters, sort, pagination and keyboard invest
   page,
 }) => {
   await setup(page);
-  await page.goto('/transactions?status=completed&country=US');
+  await visitAuthenticated(page, '/transactions?status=completed&country=US');
   await expect(
     page.getByRole('combobox', { name: 'Status', exact: true }),
   ).toHaveValue('completed');
@@ -156,6 +157,7 @@ test('finds transactions using URL filters, sort, pagination and keyboard invest
   await page.getByRole('button', { name: 'Next', exact: true }).click();
   await expect(page).toHaveURL(/offset=20/);
   await page.reload();
+  await signIn(page);
   await expect(page.getByLabel('Search transactions')).toHaveValue('acct-17');
   const link = page.getByRole('link', {
     name: `Investigate transaction ${transactionId}`,
@@ -184,7 +186,7 @@ test('filters queue and completes acknowledge assign resolve lifecycle with audi
   page,
 }) => {
   const mutations = await setup(page);
-  await page.goto('/alerts?severity=high&status=open');
+  await visitAuthenticated(page, '/alerts?severity=high&status=open');
   await expect(page.getByLabel('Severity')).toHaveValue('high');
   await page
     .getByRole('link', { name: `Investigate alert ${alertId}` })
@@ -200,7 +202,7 @@ test('filters queue and completes acknowledge assign resolve lifecycle with audi
   await page
     .getByRole('combobox', { name: 'Action', exact: true })
     .selectOption('acknowledge');
-  await page.getByLabel('Your operator ID').fill('operator-17');
+  await expect(page.getByLabel('Your operator ID')).toHaveValue('operator-17');
   await page
     .getByLabel('Investigation note')
     .fill('Reviewing new device evidence');
@@ -236,11 +238,11 @@ test('shows a conflict without retrying and reloads latest version', async ({
   page,
 }) => {
   const mutations = await setup(page, true);
-  await page.goto(`/alerts/${alertId}`);
+  await visitAuthenticated(page, `/alerts/${alertId}`);
   await page
     .getByRole('combobox', { name: 'Action', exact: true })
     .selectOption('resolve');
-  await page.getByLabel('Your operator ID').fill('operator-17');
+  await expect(page.getByLabel('Your operator ID')).toHaveValue('operator-17');
   await page.getByLabel('Investigation note').fill('Resolved after review');
   await page.getByRole('button', { name: 'Apply action' }).click();
   await expect(page.getByRole('alert')).toContainText('This alert changed');
@@ -255,13 +257,13 @@ test('false positive closure is available and empty required fields prevent subm
   page,
 }) => {
   const mutations = await setup(page);
-  await page.goto(`/alerts/${alertId}`);
+  await visitAuthenticated(page, `/alerts/${alertId}`);
   await page
     .getByRole('combobox', { name: 'Action', exact: true })
     .selectOption('false-positive');
   await page.getByRole('button', { name: 'Apply action' }).click();
   expect(mutations).toHaveLength(0);
-  await page.getByLabel('Your operator ID').fill('operator-17');
+  await expect(page.getByLabel('Your operator ID')).toHaveValue('operator-17');
   await page
     .getByLabel('Investigation note')
     .fill('Legitimate customer purchase');
@@ -275,7 +277,7 @@ test('false positive closure is available and empty required fields prevent subm
 test('detail errors and tablet layout remain accessible', async ({ page }) => {
   await setup(page);
   await page.setViewportSize({ width: 768, height: 1100 });
-  await page.goto(`/alerts/${alertId}`);
+  await visitAuthenticated(page, `/alerts/${alertId}`);
   await expect(
     page.getByRole('heading', { name: 'Audit history' }),
   ).toBeVisible();
@@ -296,6 +298,6 @@ test('detail errors and tablet layout remain accessible', async ({ page }) => {
         json: { error: { message: 'Transaction not found' } },
       }),
   );
-  await page.goto(`/transactions/${transactionId}`);
+  await visitAuthenticated(page, `/transactions/${transactionId}`);
   await expect(page.getByRole('alert')).toContainText('Transaction not found');
 });

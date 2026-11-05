@@ -1,3 +1,4 @@
+import { signIn, visitAuthenticated } from './auth-helper';
 import { expect, test, type Page } from '@playwright/test';
 
 function fixture(url: string, empty = false) {
@@ -54,7 +55,7 @@ test('loads API KPIs and all three charts without browser errors', async ({
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await mockMetrics(page);
-  await page.goto('/');
+  await visitAuthenticated(page, '/');
   await expect(
     page.getByRole('heading', { name: 'Transaction overview' }),
   ).toBeVisible();
@@ -81,7 +82,7 @@ test('loads API KPIs and all three charts without browser errors', async ({
 
 test('changes range and currency in live API requests', async ({ page }) => {
   await mockMetrics(page);
-  await page.goto('/');
+  await visitAuthenticated(page, '/');
   await expect(page.getByText('1,200', { exact: true })).toBeVisible();
   const request = page.waitForRequest(
     (request) =>
@@ -104,7 +105,7 @@ test('shows loading and honest empty state', async ({ page }) => {
     await new Promise((resolve) => setTimeout(resolve, 450));
     await route.fulfill({ json: fixture(route.request().url(), true) });
   });
-  await page.goto('/');
+  await visitAuthenticated(page, '/');
   await expect(
     page.getByRole('status', { name: 'Loading live data' }),
   ).toBeVisible();
@@ -124,7 +125,7 @@ test('displays API failure and recovers on retry', async ({ page }) => {
       json: { error: 'unavailable' },
     }),
   );
-  await page.goto('/');
+  await visitAuthenticated(page, '/');
   await expect(page.getByRole('alert')).toContainText('HTTP 503');
   await expect(page.getByRole('alert')).toContainText('trace-17');
   await page.unroute('**/api/metrics?*');
@@ -139,7 +140,7 @@ test('rejects malformed metrics instead of displaying invented data', async ({
   await page.route('**/api/metrics?*', (route) =>
     route.fulfill({ json: { overall: null } }),
   );
-  await page.goto('/');
+  await visitAuthenticated(page, '/');
   await expect(page.getByRole('alert')).toContainText(
     'unexpected metrics response',
   );
@@ -149,7 +150,7 @@ test('keeps last good data visible with a clear refresh error', async ({
   page,
 }) => {
   await mockMetrics(page);
-  await page.goto('/');
+  await visitAuthenticated(page, '/');
   await expect(page.getByText('1,200', { exact: true })).toBeVisible();
   await page.unroute('**/api/metrics?*');
   await page.route('**/api/metrics?*', (route) => route.abort());
@@ -167,16 +168,17 @@ test('navigates and supports direct nested routes', async ({ page }) => {
   await page.route('**/api/alerts?*', (route) =>
     route.fulfill({ json: { items: [], pagination: { total: 0 } } }),
   );
-  await page.goto('/');
+  await visitAuthenticated(page, '/');
   await page.getByRole('link', { name: 'Transactions', exact: false }).click();
   await expect(
     page.getByRole('heading', { name: 'Transactions', exact: true }),
   ).toBeVisible();
   await page.reload();
+  await signIn(page);
   await expect(page.getByText('No transactions found')).toBeVisible();
   await page.getByRole('link', { name: 'Alerts', exact: false }).click();
   await expect(page.getByText('No alerts found')).toBeVisible();
-  await page.goto('/not-a-real-route');
+  await visitAuthenticated(page, '/not-a-real-route');
   await expect(page.getByText('Page not found')).toBeVisible();
 });
 
@@ -186,7 +188,7 @@ for (const width of [1440, 1024, 768]) {
   }) => {
     await page.setViewportSize({ width, height: 1100 });
     await mockMetrics(page);
-    await page.goto('/');
+    await visitAuthenticated(page, '/');
     await expect(
       page.getByRole('img', { name: /Anomaly rate chart/ }),
     ).toBeVisible();

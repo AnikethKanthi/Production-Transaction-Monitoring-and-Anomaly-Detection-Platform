@@ -11,6 +11,22 @@ from sqlalchemy.engine import make_url
 from alembic import command
 
 
+@pytest.fixture(autouse=True)
+def authenticated_test_identity(request):
+    """Existing domain tests use an explicit identity; security tests exercise real auth."""
+    if request.node.get_closest_marker("security"):
+        yield
+        return
+    from app.core.security import Principal, get_principal
+    from app.main import app
+
+    app.dependency_overrides[get_principal] = lambda: Principal(
+        username="analyst-17", role="administrator"
+    )
+    yield
+    app.dependency_overrides.pop(get_principal, None)
+
+
 @pytest.fixture
 def database_connection() -> Iterator[Connection]:
     """Use an isolated schema; never upgrade/downgrade an existing app schema."""

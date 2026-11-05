@@ -32,6 +32,7 @@ class TelemetryMiddleware:
         supplied = headers.get(b"x-correlation-id", b"").decode("ascii", errors="ignore")
         correlation = supplied if re.fullmatch(r"[A-Za-z0-9._-]{1,128}", supplied) else uuid4().hex
         token = request_id.set(correlation)
+        scope.setdefault("state", {})["correlation_id"] = correlation
         status_code = 500
         started = time.perf_counter()
 

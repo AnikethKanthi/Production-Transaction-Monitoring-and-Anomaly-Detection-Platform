@@ -100,4 +100,4 @@ class AnomalyProcessor:
 
 
 def _failure_reason(error: Exception) -> str:
-    return f"{type(error).__name__}: {error}"[:512]
+    return f"{type(error).__name__}: model scoring unavailable"

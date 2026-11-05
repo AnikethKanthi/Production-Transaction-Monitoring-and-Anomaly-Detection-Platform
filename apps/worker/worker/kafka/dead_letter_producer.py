@@ -12,7 +12,17 @@ class DeadLetterProducer:
 
     @classmethod
     def connect(cls, bootstrap_servers: str) -> "DeadLetterProducer":
-        return cls(Producer({"bootstrap.servers": bootstrap_servers}))
+        return cls(
+            Producer(
+                {
+                    "bootstrap.servers": bootstrap_servers,
+                    "message.timeout.ms": 10000,
+                    "socket.timeout.ms": 5000,
+                    "retry.backoff.ms": 250,
+                    "retry.backoff.max.ms": 2000,
+                }
+            )
+        )
 
     def publish(self, event: DeadLetterEvent) -> None:
         errors: list[object] = []

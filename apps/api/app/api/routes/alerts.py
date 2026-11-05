@@ -4,6 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Query
 
 from app.api.dependencies import AlertServiceDependency
+from app.core.security import Authenticated
 from app.schemas.alert import (
     AlertAssignment,
     AlertAuditRead,
@@ -60,20 +61,48 @@ def alert_audit(alert_id: UUID, service: AlertServiceDependency) -> list[AlertAu
 
 
 @router.post("/{alert_id}/acknowledge", response_model=AlertRead)
-def acknowledge(alert_id: UUID, payload: AlertMutation, service: AlertServiceDependency):
-    return service.mutate(alert_id, "acknowledge", payload)
+def acknowledge(
+    alert_id: UUID,
+    payload: AlertMutation,
+    service: AlertServiceDependency,
+    principal: Authenticated,
+):
+    return service.mutate(
+        alert_id, "acknowledge", payload.model_copy(update={"actor": principal.username})
+    )
 
 
 @router.post("/{alert_id}/assign", response_model=AlertRead)
-def assign(alert_id: UUID, payload: AlertAssignment, service: AlertServiceDependency):
-    return service.mutate(alert_id, "assign", payload)
+def assign(
+    alert_id: UUID,
+    payload: AlertAssignment,
+    service: AlertServiceDependency,
+    principal: Authenticated,
+):
+    return service.mutate(
+        alert_id, "assign", payload.model_copy(update={"actor": principal.username})
+    )
 
 
 @router.post("/{alert_id}/resolve", response_model=AlertRead)
-def resolve(alert_id: UUID, payload: AlertMutation, service: AlertServiceDependency):
-    return service.mutate(alert_id, "resolve", payload)
+def resolve(
+    alert_id: UUID,
+    payload: AlertMutation,
+    service: AlertServiceDependency,
+    principal: Authenticated,
+):
+    return service.mutate(
+        alert_id, "resolve", payload.model_copy(update={"actor": principal.username})
+    )
 
 
 @router.post("/{alert_id}/false-positive", response_model=AlertRead)
-def false_positive(alert_id: UUID, payload: AlertMutation, service: AlertServiceDependency):
-    return service.mutate(alert_id, "false-positive", payload)
+def false_positive(
+    alert_id: UUID,
+    payload: AlertMutation,
+    service: AlertServiceDependency,
+    principal: Authenticated,
+):
+    return service.mutate(
+        alert_id, "false-positive", payload.model_copy(update={"actor": principal.username})
+    )

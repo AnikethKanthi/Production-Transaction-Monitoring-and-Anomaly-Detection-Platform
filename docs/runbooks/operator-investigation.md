@@ -1,5 +1,8 @@
 # Operator investigation workflow
 
+Sign in with an issued token before investigating records. Refreshing signs out while
+preserving the URL filters. See [security and resilience](security-resilience.md).
+
 ## Transactions
 
 Open `/transactions`. Search matches account/merchant text case-insensitively and a full
@@ -27,7 +30,8 @@ are URL-backed. Select an alert ID to open details, inspect the score, threshold
 and observed features, and read version-ordered audit history. Observed features are context,
 not a causal explanation of the model. The queue supports paging beyond its first 20 results.
 
-Choose an action, enter your operator ID and investigation note, and apply the action:
+Choose an action, review your authenticated operator ID, enter an investigation note,
+and apply the action:
 
 1. Acknowledge an open alert.
 2. Assign or reassign an open/acknowledged alert to an operator or team identifier.
@@ -36,7 +40,7 @@ Choose an action, enter your operator ID and investigation note, and apply the a
 Every mutation sends the displayed `expected_version`. Buttons are disabled while saving
 or refreshing details. Successful actions reload detail/audit data, invalidate related list
 and transaction queries, and announce completion. Terminal alerts show a read-only state.
-The actor identifier is caller supplied; the current API does not authenticate analyst IDs.
+The operator identifier is read-only; the API derives audit actors from authentication.
 
 HTTP 409 displays a conflict and offers **Reload latest alert**. The client never silently
 replays failed mutations. Read the latest version before resubmitting. Network failure may

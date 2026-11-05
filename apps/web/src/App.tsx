@@ -10,6 +10,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { lazy, Suspense, useEffect } from 'react';
 import { getHealth } from './api/client';
+import { useAuth } from './auth';
 import { EmptyState, LoadingState } from './components/ui';
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const TransactionsPage = lazy(() => import('./pages/TransactionsPage'));
@@ -20,6 +21,7 @@ const TransactionDetailsPage = lazy(
 const AlertDetailsPage = lazy(() => import('./pages/AlertDetailsPage'));
 
 function Layout() {
+  const { user, signOut } = useAuth();
   const location = useLocation();
   useEffect(() => {
     document.getElementById('main-content')?.focus();
@@ -58,6 +60,8 @@ function Layout() {
       <div className="workspace">
         <header className="topbar">
           <span>OPERATIONS / MONITORING</span>
+          <span>{user?.username} · {user?.role}</span>
+          <button type="button" onClick={signOut}>Sign out</button>
           <div
             className={`connection ${health.isError ? 'offline' : ''}`}
             role="status"

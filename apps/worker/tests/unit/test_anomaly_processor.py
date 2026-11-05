@@ -47,7 +47,7 @@ def test_model_failure_returns_persistable_fallback() -> None:
     assert result.score == 0.0
     assert result.model_version == "fallback.v1"
     assert result.status == "fallback"
-    assert result.failure_reason == "RuntimeError: model execution failed"
+    assert result.failure_reason == "RuntimeError: model scoring unavailable"
 
 
 def test_missing_model_does_not_raise() -> None:

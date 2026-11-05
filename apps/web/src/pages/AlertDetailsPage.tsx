@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiGet, apiPost } from '../api/client';
+import { useAuth } from '../auth';
 import type { AlertDetails, Alert } from '../api/investigations';
 import { utc } from '../api/investigations';
 import {
@@ -13,6 +14,7 @@ import {
 } from '../components/ui';
 
 export default function AlertDetailsPage() {
+  const { user } = useAuth();
   const { id } = useParams();
   const [params] = useSearchParams();
   const client = useQueryClient();
@@ -170,7 +172,7 @@ export default function AlertDetailsPage() {
                       operation: action,
                       body: {
                         expected_version: data.version,
-                        actor: String(fields.get('actor')).trim(),
+                        actor: user!.username,
                         reason: String(fields.get('reason')).trim(),
                         ...(action === 'assign'
                           ? { assignee: String(fields.get('assignee')).trim() }
@@ -210,6 +212,8 @@ export default function AlertDetailsPage() {
                       maxLength={128}
                       pattern=".*\S.*"
                       autoComplete="username"
+                      value={user?.username || ''}
+                      readOnly
                     />
                   </label>
                   {action === 'assign' && (

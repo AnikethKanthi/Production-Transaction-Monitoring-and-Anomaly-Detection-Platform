@@ -4,6 +4,8 @@ from threading import Event
 
 from prometheus_client import start_http_server
 from redis import Redis
+from redis.backoff import NoBackoff
+from redis.retry import Retry
 
 from worker.config import Settings
 from worker.consumers.transaction_consumer import TransactionConsumer
@@ -22,7 +24,14 @@ def run(stop: Event, settings: Settings, consumer: TransactionConsumer | None = 
         AlertPolicy.load(settings.alert_threshold_path, settings.model_path)
     )
     metrics_counter = RollingMetricsCounter(
-        Redis.from_url(settings.redis_url, decode_responses=True),
+        Redis.from_url(
+            settings.redis_url,
+            decode_responses=True,
+            socket_connect_timeout=settings.redis_timeout_seconds,
+            socket_timeout=settings.redis_timeout_seconds,
+            retry_on_timeout=False,
+            retry=Retry(NoBackoff(), 0),
+        ),
         settings.rolling_metrics_ttl_seconds,
     )
     transaction_consumer = consumer or TransactionConsumer.from_settings(

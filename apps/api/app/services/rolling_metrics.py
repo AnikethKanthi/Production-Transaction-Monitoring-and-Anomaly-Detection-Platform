@@ -24,7 +24,8 @@ class RollingMetricsService:
                 pipeline.hgetall(key)
             buckets = pipeline.execute()
         except RedisError:
-            buckets = []
+            # An unavailable dependency is not an empty, healthy traffic window.
+            raise
         total: dict[str, float] = {}
         countries: dict[str, dict[str, float]] = {}
         payment_methods: dict[str, dict[str, float]] = {}

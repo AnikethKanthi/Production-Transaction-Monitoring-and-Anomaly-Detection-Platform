@@ -1,5 +1,9 @@
 # Production Transaction Monitoring
 
+Business APIs require authentication. Provision individual operator/administrator tokens
+and sign in using the [security and resilience guide](docs/runbooks/security-resilience.md).
+No default access credentials are configured.
+
 Transaction monitoring monorepo: FastAPI, a standalone Python
 worker, React with TypeScript, PostgreSQL, Redis, and Apache Kafka in KRaft mode.
 SQLAlchemy models and Alembic migrations support transactions and processed events.

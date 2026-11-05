@@ -1,5 +1,8 @@
 # Alert investigation API
 
+All endpoints require operator or administrator bearer authentication. See
+[security and resilience](../runbooks/security-resilience.md) for credential provisioning.
+
 Apply migration `0007` before running the API or worker. New alerts start `open`, unassigned,
 at version 1. The worker writes a `create` audit entry in the alert transaction. Migration
 backfills existing alerts with an `import` audit entry and explicitly records that prior
@@ -33,8 +36,8 @@ Every mutation requires a JSON body:
 Assignment additionally requires `"assignee": "analyst-23"`. Version must be a positive
 integer; actor, reason, and assignee must be nonblank. Unknown fields are rejected. Successful
 mutations return the updated alert and increment its version by one. Use that returned version
-on the next request. Actor is a caller-supplied audit identifier, not authenticated identity;
-this repository has no analyst authentication or authorization system yet.
+on the next request. Actor is derived from the authenticated identity; the compatibility
+field supplied by the caller is overwritten and cannot impersonate another user.
 
 Optimistic concurrency is enforced by an atomic SQL update matching ID and expected version,
 not only a read-before-write check. A competing or stale update returns HTTP 409 with code
