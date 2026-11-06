@@ -4,6 +4,10 @@ Business APIs require authentication. Provision individual operator/administrato
 and sign in using the [security and resilience guide](docs/runbooks/security-resilience.md).
 No default access credentials are configured.
 
+See [performance results](docs/performance/results.md) for measured local baselines,
+load-test commands, tuning decisions and unverified system targets. Recovery procedures
+are in the [incident runbook](docs/runbooks/incident-response.md).
+
 Transaction monitoring monorepo: FastAPI, a standalone Python
 worker, React with TypeScript, PostgreSQL, Redis, and Apache Kafka in KRaft mode.
 SQLAlchemy models and Alembic migrations support transactions and processed events.

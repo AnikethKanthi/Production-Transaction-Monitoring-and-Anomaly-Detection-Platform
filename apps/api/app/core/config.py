@@ -25,6 +25,10 @@ class Settings(BaseSettings):
     redis_timeout_seconds: float = Field(default=1, gt=0, le=5)
     database_connect_timeout_seconds: int = Field(default=3, ge=1, le=10)
     database_statement_timeout_ms: int = Field(default=5000, ge=100, le=30000)
+    database_pool_size: int = Field(default=5, ge=1, le=50)
+    database_max_overflow: int = Field(default=5, ge=0, le=50)
+    database_pool_timeout_seconds: float = Field(default=3, gt=0, le=30)
+    database_pool_recycle_seconds: int = Field(default=300, ge=30, le=3600)
 
     @model_validator(mode="after")
     def validate_security(self):

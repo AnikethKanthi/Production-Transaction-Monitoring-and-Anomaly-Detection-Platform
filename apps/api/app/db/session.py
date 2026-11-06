@@ -14,7 +14,11 @@ def get_engine() -> Engine:
     return create_engine(
         settings.sqlalchemy_url,
         pool_pre_ping=True,
-        pool_timeout=3,
+        pool_size=settings.database_pool_size,
+        max_overflow=settings.database_max_overflow,
+        pool_timeout=settings.database_pool_timeout_seconds,
+        pool_recycle=settings.database_pool_recycle_seconds,
+        pool_use_lifo=True,
         hide_parameters=True,
         connect_args={
             "connect_timeout": settings.database_connect_timeout_seconds,

@@ -1,0 +1,29 @@
+{
+  "kind": "local_components_not_system_load",
+  "recorded_at": "2026-11-06T10:34:16.198261+00:00",
+  "python": "3.14.6",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "rows": 2000,
+  "concurrency": 1,
+  "warmup_samples": 10,
+  "api_sqlite_asgi_ms": {
+    "count": 200,
+    "p50": 11.282799998298287,
+    "p95": 17.261300003156066,
+    "max": 20.485300105065107
+  },
+  "model_inference_ms": {
+    "count": 200,
+    "p50": 30.918299918994308,
+    "p95": 37.160899955779314,
+    "max": 48.31570014357567
+  },
+  "model_version": "isolation_forest.v1",
+  "model_sha256": "c7dd46a3c9646a32292a473b62b2f6de1ae3c926c0584f3e216e551c55ea60ea",
+  "system_targets": {
+    "api_p95": "not_assessed_without_network_postgres_redis",
+    "alert_latency": "not_assessed_without_kafka_worker",
+    "throughput_and_lag": "not_assessed_without_kafka_worker",
+    "backup_restore": "not_executed_without_postgresql"
+  }
+}

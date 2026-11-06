@@ -79,7 +79,7 @@ Requests rejected before authentication do not consume the per-user budget.
 | PostgreSQL | Connect/pool acquisition 3s, statement 5s, lock wait 2s. SQL parameters hidden. Per-operation bounds, not a total request deadline. |
 | Redis | Connect/socket 1s each, client retries disabled. Security enforcement fails closed, cache reads fall back to PostgreSQL, rolling-only API returns 503, worker counters are best effort. |
 | Kafka | Socket 5s, producer delivery/flush 10s, reconnect backoff 250ms–10s, producer backoff 250ms–2s. Transient poll faults wait with jitter; fatal errors exit. |
-| Worker processing | Default 3 attempts. Full jitter between 0 and `min(30s, base * 2^(attempt-1))`, base 0.5s. Exhaustion publishes DLQ before offset commit. Failed DLQ/commit never counts success; Compose restarts an exited worker for idempotent replay. |
+| Worker processing | Default 3 attempts with capped exponential full jitter. Transient database/pool failures exit uncommitted for replay; permanent/other exhausted failures publish DLQ before commit. Failed DLQ/commit never counts success. Compose supervises restart. |
 | Model | Missing/incompatible model, exceptions or non-finite output store score 0, `fallback.v1`, safe failure category and fallback metrics. Local synchronous inference has no hard timeout for a hung native call. |
 | HTTP | Frontend 8s; Nginx upstream connect 3s, send 5s, read 15s. Writes are not automatically retried: timeout does not prove rollback. |
 

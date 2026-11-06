@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 from confluent_kafka import KafkaError, KafkaException
 from redis.exceptions import ConnectionError as RedisConnectionError
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import InterfaceError, OperationalError
 from test_anomaly_processor import features
 from test_transaction_consumer import event_payload, message
 
@@ -20,29 +20,32 @@ from worker.monitoring.rolling_metrics import RollingMetricsCounter
 from worker.processors.anomaly_processor import AnomalyProcessor, ScoreResult
 
 
-def test_postgres_failure_has_bounded_jitter_and_sanitized_dead_letter():
+@pytest.mark.parametrize("invalidated", [False, True])
+def test_postgres_failure_has_bounded_jitter_and_leaves_offset_uncommitted(invalidated):
     client, publisher, sleeper = Mock(), Mock(), Mock()
+    failure = InterfaceError if invalidated else OperationalError
     processor = Mock(
-        side_effect=OperationalError(
-            "secret SQL", {"pan": "4111111111111111"}, Exception("password=private")
+        side_effect=failure(
+            "secret SQL",
+            {"pan": "4111111111111111"},
+            Exception("password=private"),
+            connection_invalidated=invalidated,
         )
     )
-    TransactionConsumer(
-        client,
-        processor,
-        publisher,
-        max_processing_attempts=3,
-        retry_backoff_seconds=60,
-        random_source=lambda: 0.5,
-        sleeper=sleeper,
-    )._handle(message(event_payload()))
+    with pytest.raises(failure):
+        TransactionConsumer(
+            client,
+            processor,
+            publisher,
+            max_processing_attempts=3,
+            retry_backoff_seconds=60,
+            random_source=lambda: 0.5,
+            sleeper=sleeper,
+        )._handle(message(event_payload()))
     assert processor.call_count == 3
     assert [call.args[0] for call in sleeper.call_args_list] == [15, 15]
-    dead_letter = publisher.call_args.args[0]
-    assert dead_letter.error_type == "OperationalError"
-    assert "private" not in dead_letter.error_message
-    assert "4111111111111111" not in dead_letter.error_message
-    client.commit.assert_called_once()
+    publisher.assert_not_called()
+    client.commit.assert_not_called()
 
 
 def test_kafka_poll_outage_recovers_and_shutdown_closes_consumer():

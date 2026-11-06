@@ -1,0 +1,16 @@
+.git
+.venv
+.local
+.local-auth-user.json
+.env
+**/.env
+**/*.token
+**/*.dump
+**/node_modules
+**/dist
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+**/*.egg-info
+apps/web/test-results
+apps/web/playwright-report

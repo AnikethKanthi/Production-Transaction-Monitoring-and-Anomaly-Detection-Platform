@@ -7,6 +7,8 @@ from typing import Protocol
 from uuid import UUID
 
 from confluent_kafka import Consumer, KafkaError, KafkaException, Message
+from sqlalchemy.exc import DBAPIError, DisconnectionError, OperationalError
+from sqlalchemy.exc import TimeoutError as PoolTimeoutError
 
 from worker.config import Settings
 from worker.events.dead_letter import DeadLetterEvent
@@ -176,6 +178,12 @@ class TransactionConsumer:
                         * self.random_source()
                     )
                     continue
+                if isinstance(error, (OperationalError, DisconnectionError, PoolTimeoutError)) or (
+                    isinstance(error, DBAPIError) and error.connection_invalidated
+                ):
+                    # Infrastructure outages are replayable, not permanently invalid events.
+                    # Exit uncommitted; supervision reconnects and replay is idempotent.
+                    raise
                 self._publish_dead_letter(
                     message, payload, error, attempts=attempt, event_id=event.event_id
                 )

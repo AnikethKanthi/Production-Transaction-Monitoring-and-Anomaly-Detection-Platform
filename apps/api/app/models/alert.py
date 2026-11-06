@@ -6,6 +6,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     String,
     UniqueConstraint,
@@ -20,6 +21,7 @@ from app.db.base import Base
 class Alert(Base):
     __tablename__ = "alerts"
     __table_args__ = (
+        Index("ix_alerts_status_created_at_id", "status", "created_at", "id"),
         UniqueConstraint("transaction_id", "policy_version", name="uq_alerts_transaction_policy"),
         CheckConstraint("severity IN ('low', 'medium', 'high', 'critical')", name="valid_severity"),
         CheckConstraint(

@@ -6,7 +6,9 @@ from sqlalchemy.engine import URL, make_url
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore", hide_input_in_errors=True)
+    model_config = SettingsConfigDict(
+        env_file=".env", extra="ignore", hide_input_in_errors=True, populate_by_name=True
+    )
 
     kafka_bootstrap_servers: str = "127.0.0.1:9092"
     kafka_consumer_group: str = "transaction-processor-v1"
@@ -16,6 +18,14 @@ class Settings(BaseSettings):
     redis_timeout_seconds: float = Field(default=1, gt=0, le=5)
     database_connect_timeout_seconds: int = Field(default=3, ge=1, le=10)
     database_statement_timeout_ms: int = Field(default=5000, ge=100, le=30000)
+    database_pool_size: int = Field(
+        default=1, ge=1, le=50, validation_alias="WORKER_DATABASE_POOL_SIZE"
+    )
+    database_max_overflow: int = Field(
+        default=0, ge=0, le=50, validation_alias="WORKER_DATABASE_MAX_OVERFLOW"
+    )
+    database_pool_timeout_seconds: float = Field(default=3, gt=0, le=30)
+    database_pool_recycle_seconds: int = Field(default=300, ge=30, le=3600)
     model_path: Path = Path("model-artifacts/isolation_forest.v1.joblib")
     model_metadata_path: Path = Path("model-artifacts/isolation_forest.v1.metadata.json")
     alert_threshold_path: Path = Path("model-artifacts/isolation_forest.v1.threshold.json")

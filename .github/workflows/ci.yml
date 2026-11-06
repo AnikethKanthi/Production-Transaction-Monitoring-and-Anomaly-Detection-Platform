@@ -9,6 +9,44 @@ permissions:
   contents: read
 
 jobs:
+  recovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e 'apps/api[dev,ml]' -e 'apps/worker[dev]'
+      - name: Create disposable load identity
+        run: |
+          python scripts/create_auth_user.py --username load-admin --role administrator --token-file .local/admin.token > .local-auth-user.json
+          python -c "import json; print('AUTH_USERS='+json.dumps([json.load(open('.local-auth-user.json'))]))" >> "$GITHUB_ENV"
+      - name: Start disposable stack
+        id: stack
+        run: docker compose -p drill-ci up --build -d --wait api worker
+      - name: Measure API
+        run: python scripts/run_load_test.py --count 60 --rate 2 --token-file .local/admin.token --report .local/system-api.json
+      - name: Measure pipeline
+        if: ${{ always() && steps.stack.outcome == 'success' }}
+        run: python scripts/run_load_test.py --mode kafka --count 40 --report .local/system-pipeline.json
+      - name: Capture query plans
+        if: ${{ always() && steps.stack.outcome == 'success' }}
+        run: python scripts/explain_queries.py --refresh-statistics --report .local/system-query-plans.json
+      - name: Verify replay, interruptions, backup and restore
+        if: ${{ always() && steps.stack.outcome == 'success' }}
+        run: python scripts/run_recovery_drill.py --project drill-ci --output .local/recovery
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-recovery-results
+          path: |
+            .local/system-*.json
+            .local/recovery/report.json
+          include-hidden-files: true
+      - name: Remove disposable stack
+        if: always()
+        run: docker compose -p drill-ci down -v
   monitoring:
     runs-on: ubuntu-latest
     steps:

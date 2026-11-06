@@ -74,7 +74,7 @@ def test_upgrade_downgrade_and_upgrade_again(
         "alert_audit",
         "alembic_version",
     }
-    assert database_connection.scalar(text("SELECT version_num FROM alembic_version")) == "0008"
+    assert database_connection.scalar(text("SELECT version_num FROM alembic_version")) == "0009"
     database_connection.commit()
     command.check(alembic_config)
     database_connection.commit()
@@ -95,7 +95,8 @@ def test_indexes_and_event_primary_key(migrated_connection: Connection) -> None:
         "ix_transactions_created_at": ["created_at"],
         "ix_transactions_occurred_at_id": ["occurred_at", "id"],
         "ix_transactions_account_id_occurred_at": ["account_id", "occurred_at"],
-        "ix_transactions_status_occurred_at": ["status", "occurred_at"],
+        "ix_transactions_status_occurred_at": ["status", "occurred_at", "id"],
+        "ix_transactions_currency_occurred_at_id": ["currency", "occurred_at", "id"],
         "ix_transactions_country_occurred_at": ["country", "occurred_at"],
     }
     assert inspector.get_pk_constraint("processed_events")["constrained_columns"] == ["event_id"]
@@ -129,5 +130,6 @@ def test_indexes_and_event_primary_key(migrated_connection: Connection) -> None:
         "ix_alerts_severity",
         "ix_alerts_created_at",
         "ix_alerts_status",
+        "ix_alerts_status_created_at_id",
         "uq_alerts_transaction_policy",
     }
