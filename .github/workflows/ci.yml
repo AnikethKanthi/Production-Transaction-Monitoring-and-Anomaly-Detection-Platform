@@ -9,6 +9,112 @@ permissions:
   contents: read
 
 jobs:
+  end-to-end:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: python -m pip install -e 'apps/worker[dev]'
+      - name: Create disposable operator identity
+        run: |
+          python scripts/create_auth_user.py --username e2e-operator --role operator --token-file .local/e2e.token > .local/e2e-user.json
+          python -c "import json; print('AUTH_USERS='+json.dumps([json.load(open('.local/e2e-user.json'))]))" >> "$GITHUB_ENV"
+      - name: Start clean application stack
+        id: stack
+        run: docker compose -p e2e-ci up --build -d --wait api worker web
+      - name: Run service smoke and contract tests
+        run: |
+          python scripts/smoke_test.py
+          python scripts/check_contracts.py
+      - name: Generate and process a real anomalous event
+        run: python scripts/run_end_to_end.py prepare --token-file .local/e2e.token --context .local/e2e-context.json
+      - name: Investigate and resolve alert in the dashboard
+        working-directory: apps/web
+        env:
+          E2E_CONTEXT_FILE: ${{ github.workspace }}/.local/e2e-context.json
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:5173
+          PLAYWRIGHT_EXTERNAL_SERVER: '1'
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          npm run test:e2e -- --grep "generated anomaly is visible"
+      - name: Verify resolved state and audit trail
+        run: python scripts/run_end_to_end.py verify --context .local/e2e-context.json
+      - name: Capture service logs on failure
+        if: failure() && steps.stack.outcome == 'success'
+        run: docker compose -p e2e-ci logs --no-color > .local/e2e-services.log
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: end-to-end-failure
+          path: |
+            .local/e2e-services.log
+            apps/web/test-results/
+          include-hidden-files: true
+      - name: Remove disposable stack
+        if: always()
+        run: docker compose -p e2e-ci down -v
+
+  dependency-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Audit Python runtime dependencies
+        run: |
+          python -m venv "$RUNNER_TEMP/dependency-audit"
+          "$RUNNER_TEMP/dependency-audit/bin/python" -m pip install --upgrade --upgrade-strategy eager pip pip-audit 'apps/api[ml]' apps/worker
+          "$RUNNER_TEMP/dependency-audit/bin/python" -m pip_audit --local
+      - name: Audit frontend runtime dependencies
+        working-directory: apps/web
+        run: |
+          npm ci
+          npm audit --omit=dev --audit-level=high
+
+  container-scan:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: transaction-monitoring-api:ci
+            context: apps/api
+            dockerfile: apps/api/Dockerfile
+          - image: transaction-monitoring-worker:ci
+            context: .
+            dockerfile: apps/worker/Dockerfile
+          - image: transaction-monitoring-web:ci
+            context: apps/web
+            dockerfile: apps/web/Dockerfile
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build ${{ matrix.image }}
+        run: docker build --file '${{ matrix.dockerfile }}' --tag '${{ matrix.image }}' '${{ matrix.context }}'
+      - name: Scan ${{ matrix.image }}
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: ${{ matrix.image }}
+          format: table
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
+          exit-code: '1'
+
   recovery:
     runs-on: ubuntu-latest
     timeout-minutes: 20

@@ -7,6 +7,8 @@ No default access credentials are configured.
 See [performance results](docs/performance/results.md) for measured local baselines,
 load-test commands, tuning decisions and unverified system targets. Recovery procedures
 are in the [incident runbook](docs/runbooks/incident-response.md).
+The clean-stack anomaly-to-resolution test, contract checks, and security scans are
+documented in the [end-to-end testing guide](docs/testing.md).
 
 Transaction monitoring monorepo: FastAPI, a standalone Python
 worker, React with TypeScript, PostgreSQL, Redis, and Apache Kafka in KRaft mode.
