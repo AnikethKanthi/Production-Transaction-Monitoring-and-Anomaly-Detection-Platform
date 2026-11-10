@@ -14,7 +14,7 @@ async def get(path: str) -> httpx.Response:
 def test_health_contract() -> None:
     response = asyncio.run(get("/health"))
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "service": "api", "version": "0.1.0"}
+    assert response.json() == {"status": "ok", "service": "api", "version": "1.0.0"}
 
 
 def test_health_is_documented() -> None:

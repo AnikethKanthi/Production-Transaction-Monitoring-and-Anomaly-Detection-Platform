@@ -1,36 +1,64 @@
-# Production Transaction Monitoring
+# Production Transaction Monitoring v1.0.0
 
-Business APIs require authentication. Provision individual operator/administrator tokens
-and sign in using the [security and resilience guide](docs/runbooks/security-resilience.md).
-No default access credentials are configured.
+A production-oriented reference platform that ingests transaction events through Kafka,
+persists them exactly once, builds deterministic behavioral features, scores them with a
+versioned Isolation Forest model, creates explainable alerts, and gives operators an audited
+investigation workflow. The monorepo contains FastAPI, a standalone Python worker, React and
+TypeScript, PostgreSQL, Redis, Kafka in KRaft mode, Prometheus, and Grafana.
 
-See [performance results](docs/performance/results.md) for measured local baselines,
-load-test commands, tuning decisions and unverified system targets. Recovery procedures
-are in the [incident runbook](docs/runbooks/incident-response.md).
-The clean-stack anomaly-to-resolution test, contract checks, and security scans are
-documented in the [end-to-end testing guide](docs/testing.md).
+```mermaid
+flowchart LR
+  P[Producer] --> K[Kafka] --> W[Feature + model worker] --> D[(PostgreSQL)]
+  W --> A[Alert policy]
+  U[Operator UI] --> API[FastAPI] --> D
+  API --> U
+```
 
-Transaction monitoring monorepo: FastAPI, a standalone Python
-worker, React with TypeScript, PostgreSQL, Redis, and Apache Kafka in KRaft mode.
-SQLAlchemy models and Alembic migrations support transactions and processed events.
-Transaction ingestion endpoints and a Kafka transaction event pipeline are implemented;
-versioned feature extraction, Isolation Forest scoring, and safe fallback scoring run in the worker.
+Business APIs have no default credentials. Tokens are opaque, per-user, and stored only as
+SHA-256 hashes by the service. See [security](docs/runbooks/security-resilience.md) before
+using the project beyond a disposable local environment.
 
-## Start locally with Docker
+## Prerequisites
 
-Install Docker Desktop with Linux containers and Docker Compose. Allow about 4 GB
-of memory for the local stack. From the repository root:
+- Git, Docker Desktop with Linux containers and Docker Compose v2
+- At least 4 GB available memory and ports 5173, 8000, 9092, 5432, and 6379 available
+- Python 3.12+ for setup, smoke tests, event publishing, and the guided demo
+- Node.js 22.12+ only when developing or testing the frontend outside Docker
 
-```sh
+## Quick start with Docker
+
+From the repository root, create a disposable operator. PowerShell:
+
+```powershell
+python scripts/create_auth_user.py --username local-operator --role operator --token-file .local/operator.token > .local/operator.json
+$identity = Get-Content .local/operator.json | ConvertFrom-Json
+$env:AUTH_USERS = ConvertTo-Json -Compress -InputObject @($identity)
 docker compose config --quiet
 docker compose up --build -d --wait --wait-timeout 240
 python scripts/smoke_test.py
+python scripts/check_contracts.py
 ```
+
+POSIX shell:
+
+```sh
+python scripts/create_auth_user.py --username local-operator --role operator --token-file .local/operator.token > .local/operator.json
+export AUTH_USERS="$(python -c 'import json; print(json.dumps([json.load(open(".local/operator.json"))]))')"
+docker compose config --quiet
+docker compose up --build -d --wait --wait-timeout 240
+python scripts/smoke_test.py
+python scripts/check_contracts.py
+```
+
+Open <http://localhost:5173>, paste the value from `.local/operator.token`, and sign in.
+The token and identity files are ignored by Git. Never paste tokens into commands, logs, or
+committed configuration. Use an `administrator` identity only for direct transaction creation.
 
 Compose runs a one-shot `migrate` service after PostgreSQL becomes healthy and waits
 for migrations to complete before starting the API.
 
-The defaults work without an `.env` file. To customize ports or credentials, copy
+Infrastructure defaults work without an `.env` file, but protected business features require
+the `AUTH_USERS` value created above. To customize ports or credentials, copy
 `.env.example` to `.env` (`Copy-Item .env.example .env` in PowerShell, or
 `cp .env.example .env` in a POSIX shell). Keep the local credentials out of production.
 
@@ -44,7 +72,7 @@ The defaults work without an `.env` file. To customize ports or credentials, cop
 | Kafka (host clients) | localhost:9092 |
 | Kafka (Compose clients) | kafka:29092 |
 
-`GET /health` returns `{"status":"ok","service":"api","version":"0.1.0"}`.
+`GET /health` returns `{"status":"ok","service":"api","version":"1.0.0"}`.
 It checks API liveness. Compose independently checks PostgreSQL, Redis, Kafka, API,
 and web health. Compose creates the `transactions.v1` topic before starting the API and
 worker. The worker validates and persists each event with an idempotency receipt, retries
@@ -63,6 +91,33 @@ docker compose down
 Named volumes preserve infrastructure data when containers stop. On later runs,
 the existing PostgreSQL volume retains its original credentials. If a host port is
 occupied, change its value in `.env`; pass the changed API/web URLs to the smoke script.
+
+## Demonstrate ingestion through resolution
+
+Install the worker package once so the host can publish Kafka events, then start an isolated
+demo project:
+
+```sh
+python -m venv .venv
+# PowerShell: .venv\Scripts\Activate.ps1
+# POSIX: source .venv/bin/activate
+python -m pip install -e "./apps/worker[dev]"
+python scripts/demo.py start
+```
+
+The command builds a fresh stack, creates a private operator token, publishes deterministic
+history plus a model-verified anomaly, and prints the transaction and alert IDs. Open the UI,
+read the score, threshold, reasons, and observed features, then resolve the alert with an
+investigation note. Finish with:
+
+```sh
+python scripts/demo.py verify
+python scripts/demo.py stop
+```
+
+Verification requires the persisted `create` and `resolve` audit entries. `stop` removes only
+the uniquely named disposable demo project and its volumes. See the
+[operator runbook](docs/runbooks/operator-investigation.md) for the complete workflow.
 
 ## Run applications without Docker
 
@@ -200,8 +255,35 @@ docker compose build
 ```
 
 GitHub Actions runs Python lint, formatting and tests, a locked frontend build,
-and container smoke tests on pushes and pull requests. Dependency auditing runs
-on pull requests or manual dispatch. These workflows run when changes reach GitHub.
+container smoke tests, a real event-to-resolution workflow, dependency audits, contract
+checks, and container scans. See [testing](docs/testing.md).
+
+## Release
+
+All direct Python and frontend dependencies are exactly pinned; npm transitive dependencies
+and integrity hashes are committed in `package-lock.json`. Validate release metadata with:
+
+```sh
+python scripts/check_release.py
+python scripts/build_release.py --version 1.0.0
+```
+
+The build produces three OCI-labeled application images and a local manifest. Docker is
+required and was not available in every development environment, so image IDs are produced
+only by an actual build, never invented in source. The tag workflow builds, scans, exports,
+and checksums the same images. See [deployment and release](docs/runbooks/deployment.md).
+
+## Documentation
+
+- [Architecture and trust boundaries](docs/architecture/overview.md)
+- [Event-to-alert sequence](docs/architecture/event-flow.md)
+- [REST API endpoints](docs/api/endpoints.md) and [alert workflow](docs/api/alert-workflow.md)
+- [Kafka contracts](docs/kafka-events.md) and machine-readable [event schemas](contracts/events)
+- [Database model](docs/architecture/data-model.md)
+- [Features](docs/ml/feature-definitions.md), [threshold](docs/ml/threshold-strategy.md), and [alert policy](docs/ml/alert-policies.md)
+- [Model evaluation and limitations](docs/ml/model-evaluation.md)
+- [Deployment](docs/runbooks/deployment.md), [operator investigation](docs/runbooks/operator-investigation.md), [incident response](docs/runbooks/incident-response.md), and [model rollback](docs/runbooks/model-rollback.md)
+- [Performance and recovery evidence](docs/performance/results.md)
 
 ## Layout
 

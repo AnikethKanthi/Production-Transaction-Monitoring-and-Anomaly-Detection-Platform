@@ -45,7 +45,7 @@ async function mockMetrics(page: Page) {
 
 test.beforeEach(async ({ page }) => {
   await page.route('**/api/health', (route) =>
-    route.fulfill({ json: { status: 'ok', service: 'api', version: '0.1.0' } }),
+    route.fulfill({ json: { status: 'ok', service: 'api', version: '1.0.0' } }),
   );
 });
 
@@ -72,7 +72,7 @@ test('loads API KPIs and all three charts without browser errors', async ({
   await expect(
     page.getByRole('img', { name: /Anomaly rate chart/ }),
   ).toBeVisible();
-  await expect(page.getByText('API online · v0.1.0')).toBeVisible();
+  await expect(page.getByText('API online · v1.0.0')).toBeVisible();
   await page.getByText('View chart data as a table').click();
   await expect(
     page.getByRole('columnheader', { name: 'Bucket (UTC)' }),

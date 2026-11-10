@@ -6,6 +6,13 @@ COPY . .
 RUN npm run build
 
 FROM nginx:stable-alpine
+ARG VERSION=dev
+ARG REVISION=unknown
+ARG SOURCE_URL=local
+LABEL org.opencontainers.image.title="Transaction Monitoring Web" \
+      org.opencontainers.image.version=$VERSION \
+      org.opencontainers.image.revision=$REVISION \
+      org.opencontainers.image.source=$SOURCE_URL
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /web/dist /usr/share/nginx/html
 EXPOSE 80

@@ -1,7 +1,29 @@
 # Database model
 
-PostgreSQL 17 is the supported database. SQLAlchemy 2 maps the tables; Alembic revision
-`0001` creates them. Runtime code never calls `metadata.create_all()`.
+PostgreSQL 17 is the supported database. SQLAlchemy 2 maps the tables; Alembic revisions
+`0001` through `0009` create and tune them. Runtime code never calls `metadata.create_all()`.
+
+```mermaid
+erDiagram
+    transactions ||--o{ processed_events : receipt
+    transactions ||--o{ inference_features : produces
+    transactions ||--o| anomalies : scored_as
+    transactions ||--o{ alerts : raises
+    anomalies ||--o{ alerts : supports
+    alerts ||--o{ alert_audit : records
+    transactions {
+      uuid id PK
+      string account_id
+      decimal amount
+      string status
+      timestamptz occurred_at
+    }
+    processed_events { uuid event_id PK }
+    inference_features { uuid id PK string feature_definition_version json features }
+    anomalies { uuid id PK float score string model_version string scoring_status }
+    alerts { uuid id PK string severity string status int version json evidence }
+    alert_audit { uuid id PK int version string action string actor }
+```
 
 ## Transactions
 
@@ -12,12 +34,18 @@ PostgreSQL 17 is the supported database. SQLAlchemy 2 maps the tables; Alembic r
 | merchant_id | varchar(128) | Optional merchant identifier |
 | amount | numeric(18,2) | Required positive monetary amount |
 | currency | varchar(3) | Required three uppercase ASCII letters; not an ISO registry lookup |
-| status | varchar(16) | pending, completed, or failed; defaults to pending |
+| country | varchar(2) | Required two uppercase letters |
+| status | varchar(16) | pending, completed, failed, or refunded; defaults to pending |
 | occurred_at | timestamptz | Required event time; callers should supply timezone-aware datetimes |
+| device_id | varchar(128) | Optional device identifier used by features |
+| ip_address | varchar(128) | Optional source identifier used by features; not assumed to be parsed IP data |
+| payment_method | varchar(128) | Optional payment-method category |
+| order_amount | numeric(18,2) | Optional positive order total |
 | created_at | timestamptz | Database-generated insertion time |
 
-Indexes support descending history/pagination `(occurred_at, id)`, account history
-`(account_id, occurred_at)`, and status/time filtering `(status, occurred_at)`.
+Indexes support stable history/pagination `(occurred_at, id)`, account history
+`(account_id, occurred_at)`, status/time `(status, occurred_at, id)`, country/time,
+currency/time/ID, and creation-time reporting.
 The primary key already indexes ID lookups. Numeric amounts are represented as
 `Decimal` in Python, not floating point.
 
@@ -32,8 +60,16 @@ The primary key already indexes ID lookups. Numeric amounts are represented as
 
 Indexes cover `transaction_id` audit lookups and `processed_at` retention scans.
 Event IDs have no generated default: retries must reuse the original producer event ID.
-Primary-key enforcement rejects duplicates, including concurrent inserts. No
-read-before-write check is used to establish uniqueness.
+The worker performs a fast receipt lookup to skip ordinary replay, while primary-key
+enforcement remains authoritative and rejects duplicates, including concurrent inserts.
+
+## Inference and alert tables
+
+`inference_features` stores the immutable JSON feature vector, event ID, computation time, and feature-definition version; `(transaction_id, feature_definition_version)` is unique. `anomalies` stores one score per transaction with model version, scored/fallback status, safe failure reason, latency, and creation time.
+
+`alerts` references both transaction and anomaly, preserves the source event ID, severity, policy/model versions, evidence JSON, workflow status, assignee, optimistic version, and timestamps. `(transaction_id, policy_version)` deduplicates policy output. `alert_audit` has a unique `(alert_id, version)` and stores action, authenticated actor, reason, before/after state, and timestamp. Alert deletion cascades audit history; transaction deletion cascades inference/anomaly/alert records but is not an operator API operation.
+
+Current query indexes cover transaction list filters and stable ordering, alert queue status/time ordering, model/time reporting, transaction/event lookups, and audit traversal. Confirm index effectiveness with `scripts/explain_queries.py` on representative PostgreSQL data.
 
 ## Sessions and repositories
 

@@ -9,7 +9,7 @@ router = APIRouter(tags=["health"])
 class HealthResponse(BaseModel):
     status: Literal["ok"] = "ok"
     service: str = "api"
-    version: str = "0.1.0"
+    version: str = "1.0.0"
 
 
 @router.get("/health", response_model=HealthResponse)

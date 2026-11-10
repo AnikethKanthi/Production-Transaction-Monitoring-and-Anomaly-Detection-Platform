@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { testToken, visitAuthenticated } from './auth-helper';
 
 test.beforeEach(async ({page}) => {
-  await page.route('**/api/health', route => route.fulfill({json: {status: 'ok', service: 'api', version: '0.1.0'}}));
+  await page.route('**/api/health', route => route.fulfill({json: {status: 'ok', service: 'api', version: '1.0.0'}}));
   await page.route('**/api/transactions?*', route => route.fulfill({json: {items: [], pagination: {limit: 20, offset: 0, total: 0}}}));
 });
 

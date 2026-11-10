@@ -1,4 +1,11 @@
 FROM python:3.12-slim
+ARG VERSION=dev
+ARG REVISION=unknown
+ARG SOURCE_URL=local
+LABEL org.opencontainers.image.title="Transaction Monitoring Worker" \
+      org.opencontainers.image.version=$VERSION \
+      org.opencontainers.image.revision=$REVISION \
+      org.opencontainers.image.source=$SOURCE_URL
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
 WORKDIR /service
 COPY apps/worker/pyproject.toml ./

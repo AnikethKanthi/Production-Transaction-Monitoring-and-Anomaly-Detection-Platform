@@ -1,0 +1,71 @@
+name: Release images
+
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Semantic version matching VERSION
+        required: true
+        default: 1.0.0
+
+permissions:
+  contents: read
+
+jobs:
+  images:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Select version
+        id: version
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then value="${GITHUB_REF_NAME#v}"; else value="${{ inputs.version }}"; fi
+          test "$value" = "$(tr -d '\r\n' < VERSION)"
+          echo "value=$value" >> "$GITHUB_OUTPUT"
+      - name: Build release images
+        run: python scripts/build_release.py --version '${{ steps.version.outputs.value }}' --source-url '${{ github.server_url }}/${{ github.repository }}'
+      - name: Scan release images
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: transaction-monitoring-api:${{ steps.version.outputs.value }}
+          format: table
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+          exit-code: '1'
+      - name: Scan worker image
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: transaction-monitoring-worker:${{ steps.version.outputs.value }}
+          format: table
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+          exit-code: '1'
+      - name: Scan web image
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: transaction-monitoring-web:${{ steps.version.outputs.value }}
+          format: table
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+          exit-code: '1'
+      - name: Export images and checksums
+        shell: bash
+        run: |
+          mkdir -p .local/release/images
+          for component in api worker web; do
+            docker save "transaction-monitoring-$component:${{ steps.version.outputs.value }}" | gzip -9 > ".local/release/images/$component.tar.gz"
+          done
+          sha256sum .local/release/images/*.tar.gz > .local/release/SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: transaction-monitoring-${{ steps.version.outputs.value }}
+          path: .local/release/
+          include-hidden-files: true
+          retention-days: 14

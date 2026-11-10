@@ -51,7 +51,7 @@ async function setup(page: Page, conflict = false) {
   };
   const mutations: Record<string, unknown>[] = [];
   await page.route('**/api/health', (route) =>
-    route.fulfill({ json: { status: 'ok', service: 'api', version: '0.1.0' } }),
+    route.fulfill({ json: { status: 'ok', service: 'api', version: '1.0.0' } }),
   );
   await page.route('**/api/transactions?*', (route) =>
     route.fulfill({
