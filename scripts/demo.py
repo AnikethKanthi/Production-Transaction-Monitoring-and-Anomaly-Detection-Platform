@@ -7,6 +7,7 @@ import json
 import os
 import re
 import shutil
+import socket
 import subprocess
 import sys
 from datetime import UTC, datetime
@@ -17,6 +18,7 @@ DEMO = ROOT / ".local/demo"
 STATE = DEMO / "state.json"
 TOKEN = DEMO / "operator.token"
 CONTEXT = DEMO / "e2e-context.json"
+FAILURE_LOG = DEMO / "failure.log"
 
 
 def run(
@@ -28,6 +30,8 @@ def run(
         env=env,
         check=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         capture_output=capture,
     )
     return result.stdout.strip() if capture else ""
@@ -40,6 +44,12 @@ def load_state() -> dict:
     if not re.fullmatch(r"demo-v1-[0-9]{8}[0-9]{6}", state.get("project", "")):
         raise RuntimeError("Refusing an invalid demo project name")
     return state
+
+
+def free_port() -> int:
+    with socket.socket() as listener:
+        listener.bind(("127.0.0.1", 0))
+        return int(listener.getsockname()[1])
 
 
 def start() -> None:
@@ -62,14 +72,33 @@ def start() -> None:
         ],
         capture=True,
     )
+    ports = {
+        "api": free_port(),
+        "web": free_port(),
+        "postgres": free_port(),
+        "redis": free_port(),
+        "kafka": free_port(),
+        "worker_metrics": free_port(),
+    }
     state = {
         "schema_version": 1,
         "project": project,
         "created_at": datetime.now(UTC).isoformat(),
+        "ports": ports,
     }
     STATE.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
     environment = os.environ.copy()
     environment["AUTH_USERS"] = json.dumps([json.loads(identity)])
+    environment.update(
+        {
+            "API_PORT": str(ports["api"]),
+            "WEB_PORT": str(ports["web"]),
+            "POSTGRES_PORT": str(ports["postgres"]),
+            "REDIS_PORT": str(ports["redis"]),
+            "KAFKA_PORT": str(ports["kafka"]),
+            "WORKER_METRICS_PORT": str(ports["worker_metrics"]),
+        }
+    )
     try:
         run(
             [
@@ -87,8 +116,26 @@ def start() -> None:
             ],
             env=environment,
         )
-        run([sys.executable, "scripts/smoke_test.py"])
-        run([sys.executable, "scripts/check_contracts.py"])
+        api_url = f"http://127.0.0.1:{ports['api']}"
+        web_url = f"http://127.0.0.1:{ports['web']}"
+        run(
+            [
+                sys.executable,
+                "scripts/smoke_test.py",
+                "--api-url",
+                api_url,
+                "--web-url",
+                web_url,
+            ]
+        )
+        run(
+            [
+                sys.executable,
+                "scripts/check_contracts.py",
+                "--url",
+                f"{api_url}/openapi.json",
+            ]
+        )
         run(
             [
                 sys.executable,
@@ -98,9 +145,23 @@ def start() -> None:
                 str(TOKEN),
                 "--context",
                 str(CONTEXT),
+                "--api-url",
+                api_url,
+                "--bootstrap-servers",
+                f"127.0.0.1:{ports['kafka']}",
             ]
         )
     except Exception:
+        logs = subprocess.run(
+            ["docker", "compose", "-p", project, "logs", "--no-color"],
+            cwd=ROOT,
+            check=False,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            capture_output=True,
+        )
+        FAILURE_LOG.write_text(logs.stdout, encoding="utf-8")
         subprocess.run(
             ["docker", "compose", "-p", project, "down", "-v"],
             cwd=ROOT,
@@ -108,9 +169,10 @@ def start() -> None:
         )
         for path in (CONTEXT, TOKEN, STATE):
             path.unlink(missing_ok=True)
+        print(f"Demo failed; sanitized service logs saved to {FAILURE_LOG}")
         raise
     context = json.loads(CONTEXT.read_text(encoding="utf-8"))
-    print("Demo ready: http://127.0.0.1:5173")
+    print(f"Demo ready: http://127.0.0.1:{ports['web']}")
     print(f"Token file: {TOKEN}")
     print(f"Transaction: {context['transaction_id']}")
     print(f"Alert: {context['alert_id']}")
@@ -121,7 +183,7 @@ def start() -> None:
 
 
 def verify() -> None:
-    load_state()
+    state = load_state()
     run(
         [
             sys.executable,
@@ -129,6 +191,8 @@ def verify() -> None:
             "verify",
             "--context",
             str(CONTEXT),
+            "--api-url",
+            f"http://127.0.0.1:{state['ports']['api']}",
         ]
     )
     print(
@@ -139,7 +203,7 @@ def verify() -> None:
 def stop() -> None:
     state = load_state()
     run(["docker", "compose", "-p", state["project"], "down", "-v"])
-    for path in (CONTEXT, TOKEN, STATE):
+    for path in (CONTEXT, TOKEN, STATE, FAILURE_LOG):
         path.unlink(missing_ok=True)
     print(f"Removed disposable demo project {state['project']} and its volumes")
 

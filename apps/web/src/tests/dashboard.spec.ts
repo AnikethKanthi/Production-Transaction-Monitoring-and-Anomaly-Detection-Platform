@@ -80,6 +80,27 @@ test('loads API KPIs and all three charts without browser errors', async ({
   expect(errors).toEqual([]);
 });
 
+test('shows isolated anomaly buckets at the 100 percent boundary', async ({
+  page,
+}) => {
+  await page.route('**/api/metrics?*', (route) => {
+    const response = fixture(route.request().url());
+    response.overall.anomaly_rate = 1;
+    response.time_series = [response.time_series[0], response.time_series[3]].map(
+      (point) => ({ ...point, anomaly_rate: 1 }),
+    );
+    return route.fulfill({ json: response });
+  });
+
+  await visitAuthenticated(page, '/');
+
+  const chart = page.getByRole('img', {
+    name: 'Anomaly rate chart: overall 100%',
+  });
+  await expect(chart).toBeVisible();
+  await expect(page.locator('.recharts-reference-dot circle')).toHaveCount(2);
+});
+
 test('changes range and currency in live API requests', async ({ page }) => {
   await mockMetrics(page);
   await visitAuthenticated(page, '/');

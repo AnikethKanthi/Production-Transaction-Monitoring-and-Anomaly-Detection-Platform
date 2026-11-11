@@ -9,6 +9,7 @@ import {
   LineChart,
   Pie,
   PieChart,
+  ReferenceDot,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -201,7 +202,8 @@ function Charts({ data }: { data: MetricsResponse }) {
                 />
                 <YAxis
                   unit="%"
-                  domain={[0, 'auto']}
+                  domain={[0, 100]}
+                  ticks={[0, 25, 50, 75, 100]}
                   axisLine={false}
                   tickLine={false}
                   fontSize={11}
@@ -220,6 +222,21 @@ function Charts({ data }: { data: MetricsResponse }) {
                   connectNulls={false}
                   isAnimationActive={false}
                 />
+                {points
+                  .filter(
+                    (point): point is typeof point & { anomaly: number } =>
+                      point.anomaly !== null,
+                  )
+                  .map((point) => (
+                    <ReferenceDot
+                      key={point.label}
+                      x={point.label}
+                      y={point.anomaly}
+                      r={3}
+                      fill="#b96b72"
+                      stroke="none"
+                    />
+                  ))}
               </LineChart>
             </ResponsiveContainer>
           </div>

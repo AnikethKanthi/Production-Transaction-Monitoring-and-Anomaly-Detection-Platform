@@ -20,7 +20,13 @@ IMAGES = {
 
 def run(command: list[str]) -> str:
     result = subprocess.run(
-        command, cwd=ROOT, check=True, text=True, capture_output=True
+        command,
+        cwd=ROOT,
+        check=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        capture_output=True,
     )
     return result.stdout.strip()
 

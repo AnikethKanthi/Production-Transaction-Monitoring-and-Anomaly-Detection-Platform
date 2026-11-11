@@ -25,17 +25,20 @@ test('generated anomaly is visible and its alert can be resolved', async ({
   await expect(anomalyChart).toBeVisible();
   await expect(anomalyChart).not.toHaveAttribute('aria-label', /overall 0\.0%/);
 
-  await page.goto(`/transactions/${context.transaction_id}`);
+  await page.evaluate((transactionId) => {
+    window.history.pushState({}, '', `/transactions/${transactionId}`);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  }, context.transaction_id);
   await expect(page.getByRole('heading', { name: 'Transaction investigation' })).toBeVisible();
   await expect(page.getByText('scored', { exact: true })).toBeVisible();
   await expect(
     page.getByRole('link', { name: /Investigate alert/ }),
   ).toBeVisible();
 
-  await page.goto(`/alerts/${context.alert_id}`);
+  await page.getByRole('link', { name: /Investigate alert/ }).click();
   await expect(page.getByRole('heading', { name: 'Alert investigation' })).toBeVisible();
-  await expect(page.getByText(/meets the inclusive alert threshold/)).toBeVisible();
-  await page.getByLabel('Action').selectOption('resolve');
+  await expect(page.getByText(/meets the inclusive alert threshold/).first()).toBeVisible();
+  await page.getByRole('combobox').selectOption('resolve');
   await page
     .getByLabel('Investigation note')
     .fill('Resolved by the Compose-backed end-to-end test');

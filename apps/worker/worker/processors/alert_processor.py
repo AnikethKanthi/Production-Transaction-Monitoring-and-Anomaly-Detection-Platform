@@ -134,9 +134,9 @@ class AlertProcessor:
             insert(AlertRecord)
             .values(**values)
             .on_conflict_do_nothing(index_elements=["transaction_id", "policy_version"])
+            .returning(AlertRecord.id)
         )
-        result = session.execute(statement)
-        created = result.rowcount == 1
+        created = session.scalar(statement) is not None
         if created:
             logger.info(
                 "Alert created: severity=%s alert_id=%s", evidence["severity"], values["id"]
