@@ -13,6 +13,11 @@ COPY apps/worker/worker ./worker
 COPY model-artifacts/isolation_forest.v1.joblib /models/isolation_forest.v1.joblib
 COPY model-artifacts/isolation_forest.v1.metadata.json /models/isolation_forest.v1.metadata.json
 COPY model-artifacts/isolation_forest.v1.threshold.json /models/isolation_forest.v1.threshold.json
-RUN pip install --upgrade pip && pip install . && useradd --create-home --uid 10001 appuser
+RUN apt-get update \
+    && apt-get upgrade --yes \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --upgrade pip setuptools \
+    && pip install . \
+    && useradd --create-home --uid 10001 appuser
 USER appuser
 CMD ["python", "-m", "worker.main"]

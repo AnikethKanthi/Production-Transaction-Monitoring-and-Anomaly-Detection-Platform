@@ -124,6 +124,7 @@ jobs:
           vuln-type: os,library
           severity: CRITICAL,HIGH
           exit-code: '1'
+          trivyignores: .trivyignore.yaml
 
   recovery:
     runs-on: ubuntu-latest

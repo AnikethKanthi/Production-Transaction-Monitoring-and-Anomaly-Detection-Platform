@@ -1,0 +1,9 @@
+vulnerabilities:
+  - id: CVE-2025-47273
+    purls:
+      - pkg:pypi/setuptools@70.3.0
+    expired_at: 2026-12-12
+    statement: >-
+      The Python base image reports setuptools 70.3.0 from its inherited SBOM after the
+      Dockerfile upgrades the installed package to 84.2.1. Limit this suppression to the
+      stale package record and remove it when the base-image SBOM is refreshed.

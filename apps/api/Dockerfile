@@ -12,7 +12,12 @@ COPY pyproject.toml ./
 COPY app ./app
 COPY alembic.ini ./
 COPY alembic ./alembic
-RUN pip install --upgrade pip && pip install . && useradd --create-home --uid 10001 appuser
+RUN apt-get update \
+    && apt-get upgrade --yes \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --upgrade pip setuptools \
+    && pip install . \
+    && useradd --create-home --uid 10001 appuser
 USER appuser
 EXPOSE 8000
 HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=5 CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"

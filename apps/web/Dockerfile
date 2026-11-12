@@ -13,6 +13,7 @@ LABEL org.opencontainers.image.title="Transaction Monitoring Web" \
       org.opencontainers.image.version=$VERSION \
       org.opencontainers.image.revision=$REVISION \
       org.opencontainers.image.source=$SOURCE_URL
+RUN apk upgrade --no-cache
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /web/dist /usr/share/nginx/html
 EXPOSE 80
