@@ -1,6 +1,6 @@
 # Performance results and acceptance status
 
-Measured 2026-11-06 on Windows 11, Python 3.14.6. The committed
+These measurements were taken on 2026-11-06 using Windows 11 and Python 3.14.6. The committed
 [raw component report](component-baseline.json) records the model SHA-256, platform,
 sample counts and timing distributions. Reproduce with:
 

@@ -1,7 +1,8 @@
 # Operator investigation workflow
 
-Sign in with an issued token before investigating records. Refreshing signs out while
-preserving the URL filters. See [security and resilience](security-resilience.md).
+Sign in with your issued token before opening a case. A page refresh signs you out, but the
+filters stay in the URL so you can continue where you left off. See
+[security and resilience](security-resilience.md) if you need a local account.
 
 ## Transactions
 

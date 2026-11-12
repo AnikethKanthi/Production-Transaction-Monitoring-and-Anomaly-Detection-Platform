@@ -1,6 +1,6 @@
 # Local development
 
-Follow the README quick start for the supported Docker path. For application development, use Python 3.12+, Node 22.12+, PostgreSQL 17, Redis 7.4, and Kafka 4.1.2. Direct dependencies are pinned in both Python projects and `package.json`; `package-lock.json` fixes the complete frontend graph.
+Use the README quick start if you want the simplest Docker setup. For day-to-day application work, use Python 3.12+, Node 22.12+, PostgreSQL 17, Redis 7.4, and Kafka 4.1.2. Both Python projects and `package.json` pin their direct dependencies; `package-lock.json` locks the complete frontend dependency graph.
 
 Create and activate `.venv`, then install `-e "apps/api[dev,ml]" -e "apps/worker[dev]"`. Run Uvicorn with `PYTHONPATH=apps/api`, the worker with `PYTHONPATH=apps/worker`, and `npm run dev` from `apps/web`. Infrastructure can remain in Compose. Never reuse production credentials or databases; integration tests require an explicit disposable `TEST_DATABASE_URL` and isolate schemas.
 

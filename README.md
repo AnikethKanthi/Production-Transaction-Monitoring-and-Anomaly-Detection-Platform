@@ -1,10 +1,11 @@
 # Production Transaction Monitoring v1.0.0
 
-A production-oriented reference platform that ingests transaction events through Kafka,
-persists them exactly once, builds deterministic behavioral features, scores them with a
-versioned Isolation Forest model, creates explainable alerts, and gives operators an audited
-investigation workflow. The monorepo contains FastAPI, a standalone Python worker, React and
-TypeScript, PostgreSQL, Redis, Kafka in KRaft mode, Prometheus, and Grafana.
+This project follows a transaction from the moment it reaches Kafka to the point where an
+operator closes the resulting alert. The worker stores each event once, builds repeatable
+behavioral features, scores the transaction with a versioned Isolation Forest model, and
+records the evidence behind every alert. Operators use the React console to investigate and
+resolve those alerts, while FastAPI, PostgreSQL, Redis, Prometheus, and Grafana support the
+workflow behind the scenes.
 
 ```mermaid
 flowchart LR

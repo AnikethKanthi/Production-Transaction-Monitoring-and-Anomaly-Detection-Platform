@@ -1,6 +1,9 @@
 # Model evaluation
 
-The committed `isolation_forest.v1` artifact is a scikit-learn Isolation Forest pipeline with deterministic seed 42, 250 estimators, and `transaction_features.v1` input order. Training used 2,000 synthetic normal rows; 200 labeled synthetic anomalies were held out from fitting and used for separation reporting. The training range is 2025-01-01 through 2025-01-08 UTC.
+The checked-in `isolation_forest.v1` artifact is a scikit-learn Isolation Forest pipeline.
+It uses seed 42, 250 estimators, and the `transaction_features.v1` input order. We trained it
+on 2,000 synthetic normal rows and held back 200 labeled synthetic anomalies for the
+separation report. The training data covers 2025-01-01 through 2025-01-08 UTC.
 
 The recorded evaluation reports mean normal score `-0.103665`, mean anomalous score `0.269015`, mean lift `0.372680`, and pairwise anomaly-score separation rate `1.0`. Scores are negative `decision_function`, so larger values are more anomalous. These results demonstrate deterministic synthetic separation, not real-world fraud performance.
 

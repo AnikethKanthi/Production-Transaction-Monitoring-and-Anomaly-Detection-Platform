@@ -1,8 +1,9 @@
 # Kafka replay and offset recovery
 
-First preserve the incident timeline, consumer group, topic/partition, last successful
-commit and original event IDs. Stop producers if a schema/policy defect is still producing
-bad events. Retain original manifests and DLQ messages privately; do not log their bodies.
+Before replaying anything, write down the incident timeline, consumer group, topic and
+partition, last successful commit, and original event IDs. Stop producers if a schema or
+policy defect is still sending bad events. Keep the original manifests and DLQ messages in a
+private location, and never copy their bodies into logs.
 
 The consumer commits offsets synchronously after durable processing (or confirmed DLQ
 delivery). `processed_events.event_id` is the replay guard. A database commit followed

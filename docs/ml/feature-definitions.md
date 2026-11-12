@@ -1,6 +1,6 @@
 # Transaction feature definitions
 
-The active feature set is `transaction_features.v1`. Feature computation uses transactions
+The worker currently uses `transaction_features.v1`. When it builds these features, it uses transactions
 for the same account whose event time is no later than the current transaction. Historical
 records are sorted by event time and transaction ID, so database return order cannot change
 the result. Monetary baselines use only records with the current transaction's currency.

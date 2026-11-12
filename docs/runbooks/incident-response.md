@@ -1,8 +1,9 @@
 # Incident response
 
-Assign an incident lead and note UTC start time, affected services, correlation/event
-IDs, deployment/model versions and first failing metric. Preserve logs without raw
-payment payloads or credentials. Classify user impact before changing infrastructure.
+Choose an incident lead first. Record the UTC start time, affected services, correlation and
+event IDs, deployment and model versions, and the first metric that failed. Preserve the logs,
+but leave out raw payment data and credentials. Agree on the user impact before changing
+infrastructure.
 
 | Symptom | Investigate | Contain / recover | Verify |
 | --- | --- | --- | --- |

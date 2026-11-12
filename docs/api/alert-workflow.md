@@ -1,6 +1,6 @@
 # Alert investigation API
 
-All endpoints require operator or administrator bearer authentication. See
+Every endpoint on this page requires an operator or administrator bearer token. See
 [security and resilience](../runbooks/security-resilience.md) for credential provisioning.
 
 Apply migration `0007` before running the API or worker. New alerts start `open`, unassigned,

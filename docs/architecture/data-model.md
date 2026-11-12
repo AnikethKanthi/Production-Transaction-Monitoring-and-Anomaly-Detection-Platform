@@ -1,7 +1,8 @@
 # Database model
 
-PostgreSQL 17 is the supported database. SQLAlchemy 2 maps the tables; Alembic revisions
-`0001` through `0009` create and tune them. Runtime code never calls `metadata.create_all()`.
+The application supports PostgreSQL 17. SQLAlchemy 2 maps the tables, and Alembic revisions
+`0001` through `0009` create and tune them. The running application never calls
+`metadata.create_all()`; schema changes belong in migrations.
 
 ```mermaid
 erDiagram

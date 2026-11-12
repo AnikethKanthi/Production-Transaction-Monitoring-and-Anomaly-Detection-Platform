@@ -9,6 +9,7 @@ x-database-environment: &database-environment
 
 services:
   postgres:
+    restart: unless-stopped
     image: postgres:17-alpine
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-transactions}
@@ -26,6 +27,7 @@ services:
       retries: 20
 
   redis:
+    restart: unless-stopped
     image: redis:7.4-alpine
     command: ["redis-server", "--appendonly", "yes"]
     ports:
@@ -39,6 +41,7 @@ services:
       retries: 20
 
   kafka:
+    restart: unless-stopped
     image: apache/kafka:4.1.2
     environment:
       KAFKA_NODE_ID: 1
@@ -92,6 +95,7 @@ services:
         condition: service_healthy
 
   api:
+    restart: unless-stopped
     build:
       context: ./apps/api
     environment:
@@ -127,7 +131,7 @@ services:
     init: true
 
   worker:
-    restart: on-failure
+    restart: unless-stopped
     build:
       context: .
       dockerfile: apps/worker/Dockerfile
@@ -168,6 +172,7 @@ services:
     stop_grace_period: 10s
 
   web:
+    restart: unless-stopped
     build:
       context: ./apps/web
     ports:
@@ -177,6 +182,7 @@ services:
         condition: service_healthy
 
   prometheus:
+    restart: unless-stopped
     image: prom/prometheus:v3.2.1
     command: ["--config.file=/etc/prometheus/prometheus.yml"]
     ports:
@@ -191,6 +197,7 @@ services:
         condition: service_started
 
   grafana:
+    restart: unless-stopped
     image: grafana/grafana:11.6.0
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}

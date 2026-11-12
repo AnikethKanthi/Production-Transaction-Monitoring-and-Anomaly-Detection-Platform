@@ -1,6 +1,6 @@
 # Deterministic anomaly alerts
 
-The worker enables `anomaly_alert.v1` by loading `ALERT_THRESHOLD_PATH` at startup.
+At startup, the worker loads `ALERT_THRESHOLD_PATH` to enable `anomaly_alert.v1`.
 The threshold sidecar must identify `anomaly_threshold.v1`, the current feature version,
 an inclusive comparator, no segment overrides, and the exact SHA-256 of the model artifact.
 A missing, corrupt, or incompatible configuration disables model alerts and logs an error;

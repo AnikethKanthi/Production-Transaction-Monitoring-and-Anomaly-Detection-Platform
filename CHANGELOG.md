@@ -2,7 +2,8 @@
 
 ## 1.0.0 — 2026-11-10
 
-First stable release of the transaction monitoring reference platform.
+This is the first stable release. It covers the complete path from Kafka ingestion to an
+operator resolving an alert in the web console.
 
 ### Included
 

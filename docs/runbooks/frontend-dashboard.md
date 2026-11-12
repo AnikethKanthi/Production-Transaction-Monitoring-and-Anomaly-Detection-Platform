@@ -1,6 +1,7 @@
 # Live monitoring dashboard
 
-Run `npm ci --prefix apps/web` and `npm run dev --prefix apps/web`. Open
+Install and start the frontend with `npm ci --prefix apps/web` and
+`npm run dev --prefix apps/web`, then open
 `http://localhost:5173`. The Vite development server proxies `/api/*` to FastAPI on
 `http://127.0.0.1:8000` by default. Set `API_PROXY_TARGET` when the API is elsewhere.
 Production Nginx provides the same proxy and falls back to `index.html` for nested routes.

@@ -2,9 +2,9 @@
 
 ## Provision users
 
-Business APIs now require per-user opaque bearer tokens. There are no default
-credentials or authentication bypass setting: `AUTH_USERS=[]` rejects every protected
-request. Generate credentials from the repository root:
+Every business API request needs a bearer token issued to a specific user. The project has
+no default login and no authentication bypass: with `AUTH_USERS=[]`, every protected request
+is rejected. Create local credentials from the repository root:
 
 ```sh
 python scripts/create_auth_user.py --username analyst-17 --role operator --token-file .local/analyst-17.token

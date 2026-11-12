@@ -1,6 +1,9 @@
 # Architecture overview
 
-The platform separates synchronous operator traffic from asynchronous transaction processing. PostgreSQL is authoritative; Redis holds expiring counters and caches; Kafka carries immutable ingestion events. The API never scores transactions and the worker never serves operator requests.
+The system keeps operator requests separate from background transaction processing. Kafka
+carries incoming events, PostgreSQL holds the durable record, and Redis stores counters and
+caches that can expire. The API handles operator traffic but never scores a transaction; the
+worker scores transactions but never serves operator requests.
 
 ```mermaid
 flowchart LR

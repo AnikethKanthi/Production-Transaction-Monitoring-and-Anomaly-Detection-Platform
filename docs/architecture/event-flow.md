@@ -1,5 +1,8 @@
 # Event-to-alert flow
 
+The sequence below shows the normal path from a producer publishing an event to an operator
+seeing the resulting transaction or alert.
+
 ```mermaid
 sequenceDiagram
     participant Producer

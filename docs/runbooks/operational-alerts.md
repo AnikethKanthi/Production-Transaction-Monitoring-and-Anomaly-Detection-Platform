@@ -1,7 +1,7 @@
 # Grafana dashboards and operational alerts
 
-Start with `docker compose up --build -d`. Compose runs migrations (including the
-ingestion timestamp index) before the API starts. Grafana opens at
+Start the stack with `docker compose up --build -d`. Compose finishes the database
+migrations, including the ingestion timestamp index, before it starts the API. Open Grafana at
 <http://127.0.0.1:3000>; credentials come from `GRAFANA_ADMIN_USER` and
 `GRAFANA_ADMIN_PASSWORD` in `.env.example`. Grafana persists its state in
 `grafana_data`. Changing the password variable does not reset an existing volume's

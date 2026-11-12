@@ -1,6 +1,7 @@
 # End-to-end testing and CI
 
-The CI pipeline validates the application at three levels:
+We test the project at three levels so a fast unit test failure is easy to diagnose without
+losing coverage of the real event pipeline:
 
 - API and worker unit/integration tests, migration tests, frontend build, and mocked browser tests.
 - A clean Compose test that sends real Kafka events through the worker, PostgreSQL, API, and React UI.

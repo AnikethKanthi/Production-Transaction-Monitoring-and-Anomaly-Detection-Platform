@@ -1,9 +1,10 @@
 # Model rollback
 
-Record current model/metadata/threshold hashes, fallback rate, scoring latency and alert
-volume first. Preserve the failing artifact privately. Select a previously evaluated,
-trusted artifact bundle with matching feature definition/order and threshold SHA-256;
-joblib is executable input and must never be loaded from an untrusted source.
+Before changing anything, record the current model, metadata, and threshold hashes along
+with the fallback rate, scoring latency, and alert volume. Keep the failing artifact in a
+private location for later analysis. Roll back only to a trusted, previously evaluated bundle
+whose feature order and threshold SHA-256 match. A joblib file contains executable input, so
+never load one from an untrusted source.
 
 Rebuild/redeploy the worker image with the known-good bundle under its configured
 `/models` paths. The default Compose model paths are baked into its environment; changing

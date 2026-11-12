@@ -1,6 +1,9 @@
 # Deployment and release
 
-Version `1.0.0` supports Docker Compose for a single-host deployment and provides independently buildable API, worker, and web images. PostgreSQL, Kafka, Redis, Prometheus, and Grafana remain external stateful dependencies in production even though Compose supplies them for development and demonstrations.
+Version `1.0.0` can run on one host with Docker Compose, and the API, worker, and web images
+can each be built on their own. Compose includes PostgreSQL, Kafka, Redis, Prometheus, and
+Grafana for local work and demonstrations. In production, treat those as separately managed
+stateful services rather than disposable application containers.
 
 ## Required configuration
 
@@ -27,6 +30,22 @@ This builds `transaction-monitoring-api:1.0.0`, `transaction-monitoring-worker:1
 5. Deploy the web image and verify same-origin `/api` proxy, secure headers, sign-in, dashboard, transaction, and alert pages.
 6. Increase worker replicas only within the Kafka partition and database connection budgets.
 7. Run smoke, contract, and a controlled end-to-end probe. Do not use the destructive recovery drill on a shared environment.
+
+## Container-engine restart recovery
+
+All long-running Compose services use `restart: unless-stopped`, so PostgreSQL, Redis, Kafka, the API, worker, web application, Prometheus, and Grafana return after a Docker or host restart. The `kafka-init` and `migrate` services deliberately remain one-shot jobs and are not restarted continuously.
+
+After an engine or host restart, verify recovery with:
+
+```sh
+docker compose ps
+curl --fail http://localhost:8000/health
+curl --fail http://localhost:5173/
+curl --fail http://localhost:9090/-/healthy
+curl --fail http://localhost:3000/api/health
+```
+
+Wait for the stateful dependency health checks before judging application recovery, then confirm the worker is consuming and Kafka lag is falling. An explicit `docker compose stop` is remembered by `unless-stopped` and prevents automatic startup by design; resume an intentionally stopped deployment with `docker compose up -d --wait`.
 
 ## Rollback
 

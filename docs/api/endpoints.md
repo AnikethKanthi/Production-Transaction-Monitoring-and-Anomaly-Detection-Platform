@@ -1,6 +1,11 @@
 # REST API v1.0.0
 
-Interactive OpenAPI is served at `/docs`; the machine contract is `/openapi.json`. Except for `GET /health` and private Prometheus endpoints, send `Authorization: Bearer <token>`. JSON validation failures return 422, missing resources 404, authentication failures 401/403, stale alert versions 409, rate limits 429, and controlled dependency failures 503. Error responses include a safe message and correlation ID; use the response `X-Correlation-ID` when escalating.
+Use `/docs` to explore the API in a browser or `/openapi.json` for the machine-readable
+contract. Except for `GET /health` and the private Prometheus endpoints, every request needs
+`Authorization: Bearer <token>`. Validation failures return 422, missing resources 404,
+authentication failures 401/403, stale alert versions 409, rate limits 429, and controlled
+dependency failures 503. Error responses include a safe message and correlation ID; include
+the response `X-Correlation-ID` when you escalate a problem.
 
 | Method | Path | Role | Purpose |
 | --- | --- | --- | --- |

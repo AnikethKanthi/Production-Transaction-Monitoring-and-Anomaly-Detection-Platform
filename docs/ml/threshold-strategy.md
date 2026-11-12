@@ -1,7 +1,9 @@
 # Threshold selection: anomaly_threshold.v1
 
-Run `python scripts/evaluate_threshold.py` from the repository root after installing
-`pip install -e "apps/api[dev,ml]"`. This evaluates the saved model without retraining it.
+This document records why the current alert threshold was chosen and what its limits are.
+To reproduce the numbers, install `pip install -e "apps/api[dev,ml]"`, then run
+`python scripts/evaluate_threshold.py` from the repository root. The command evaluates the
+saved model without retraining it.
 The versioned `.threshold.json` sidecar binds the threshold to the model version, SHA-256,
 feature version, evaluation version, seed, dataset hash, and library versions.
 

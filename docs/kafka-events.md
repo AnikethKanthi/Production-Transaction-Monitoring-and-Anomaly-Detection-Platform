@@ -1,5 +1,8 @@
 # Kafka event contracts
 
+Producers and consumers use these contracts as their shared source of truth. If an event
+changes, update the schema, runtime validation, tests, and this document together.
+
 ## Topics
 
 | Topic | Partitions | Producer | Consumer | Retention meaning |

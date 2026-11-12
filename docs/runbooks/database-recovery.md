@@ -1,6 +1,7 @@
 # Database backup and restore
 
-Define an owner, RPO and RTO before deployment. A local Docker volume is not a backup.
+Name the backup owner and agree on the RPO and RTO before deployment. A local Docker volume
+is not a backup.
 The included logical dump covers one database, not cluster roles, secrets, Kafka,
 Redis, model artifacts or point-in-time recovery. Schedule encrypted off-host backups,
 access controls, retention, checksums and routine restore drills separately; use WAL
