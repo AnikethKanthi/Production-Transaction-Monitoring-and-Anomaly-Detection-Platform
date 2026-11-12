@@ -1,7 +1,6 @@
 import re
 from pathlib import Path
 
-
 COMPOSE_FILE = Path(__file__).resolve().parents[4] / "docker-compose.yml"
 LONG_RUNNING_SERVICES = {
     "api",

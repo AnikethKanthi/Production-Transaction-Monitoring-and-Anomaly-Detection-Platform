@@ -32,7 +32,7 @@ jobs:
       - name: Build release images
         run: python scripts/build_release.py --version '${{ steps.version.outputs.value }}' --source-url '${{ github.server_url }}/${{ github.repository }}'
       - name: Scan release images
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: transaction-monitoring-api:${{ steps.version.outputs.value }}
           format: table
@@ -40,7 +40,7 @@ jobs:
           severity: CRITICAL,HIGH
           exit-code: '1'
       - name: Scan worker image
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: transaction-monitoring-worker:${{ steps.version.outputs.value }}
           format: table
@@ -48,7 +48,7 @@ jobs:
           severity: CRITICAL,HIGH
           exit-code: '1'
       - name: Scan web image
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: transaction-monitoring-web:${{ steps.version.outputs.value }}
           format: table

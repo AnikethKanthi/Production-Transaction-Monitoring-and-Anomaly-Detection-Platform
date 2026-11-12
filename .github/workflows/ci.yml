@@ -34,6 +34,7 @@ jobs:
       - run: python -m pip install -e 'apps/worker[dev]'
       - name: Create disposable operator identity
         run: |
+          mkdir -p .local
           python scripts/create_auth_user.py --username e2e-operator --role operator --token-file .local/e2e.token > .local/e2e-user.json
           python -c "import json; print('AUTH_USERS='+json.dumps([json.load(open('.local/e2e-user.json'))]))" >> "$GITHUB_ENV"
       - name: Start clean application stack
@@ -115,7 +116,7 @@ jobs:
       - name: Build ${{ matrix.image }}
         run: docker build --file '${{ matrix.dockerfile }}' --tag '${{ matrix.image }}' '${{ matrix.context }}'
       - name: Scan ${{ matrix.image }}
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ matrix.image }}
           format: table
